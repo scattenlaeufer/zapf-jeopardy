@@ -9,17 +9,68 @@ class Jeopardy(QtGui.QWidget):
 
 	class Player:
 
-		def __init__(self):
-			self.name = 'foobar'
-			self.punket = 0
+		def rename(self):
+			text, ok = QtGui.QInputDialog.getText(None,'rename '+self.name, 'enter new name:')
+			if ok and text != '':
+				self.name = text
+				self.name_text.setText(self.name)
+
+
+		def bonus(self):
+			bonus_points, ok = QtGui.QInputDialog.getText(None,'bouns points','give '+self.name+' bonus points:')
+			if ok and bonus_points != '':
+				try:
+					self.add_points(int(bonus_points))
+				except ValueError:
+					message = QtGui.QMessageBox(3,'ValueError','points must be integer!\nnoting will happen')
+					message.exec_()
+
+		def add_points(self,points):
+			self.points += points
+			self.points_text.setText(str(self.points))
+
+		def __init__(self,app,name,color,points=0):
+			self.app = app
+			self.name = name
+			self.points = points
+			self.color = QtGui.QPalette(QtGui.QColor(color[0],color[1],color[2]))
+
+			layout = QtGui.QGridLayout(None)
+			name_label = QtGui.QLabel('Name')
+			points_label = QtGui.QLabel('Points')
+			self.name_text = QtGui.QLineEdit()
+			self.name_text.setText(self.name)
+			self.name_text.setReadOnly(True)
+			self.points_text = QtGui.QLineEdit()
+			self.points_text.setReadOnly(True)
+			self.points_text.setText(str(self.points))
+			rename_button = QtGui.QPushButton('rename')
+			bonus_button = QtGui.QPushButton('bonus')
+			
+			layout.addWidget(name_label,0,0)
+			layout.addWidget(self.name_text,0,1,1,2)
+			layout.addWidget(points_label,1,0)
+			layout.addWidget(self.points_text,1,1,1,2)
+			layout.addWidget(rename_button,2,0)
+			layout.addWidget(bonus_button,2,1)
+	
+			self.box = QtGui.QGroupBox(name)
+			self.box.setLayout(layout)
+			self.box.setAutoFillBackground(True)
+			self.box.setPalette(self.color)
+
+			self.app.connect(rename_button,Qt.SIGNAL('pressed()'),lambda: self.rename())
+			self.app.connect(bonus_button,Qt.SIGNAL('pressed()'),lambda: self.bonus())
 
 
 	def quit(self):
-		self.app.quit()
+		message = message = QtGui.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+		resp = message.exec_()
+		if resp == 16384:
+			self.app.quit()
 
 
 	def select_field(self,category_id,level):
-		print('category: '+str(category_id)+' at level '+str(level))
 		self.current_field = [category_id,level]
 		self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
 		self.listen = True
@@ -27,9 +78,12 @@ class Jeopardy(QtGui.QWidget):
 
 
 	def correct(self):
-		print('CORRECT!')
 		self.set_response(False)
 		self.set_field_activity(True)
+		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
+		player = self.player[self.active_player]
+		button.setPalette(player.color)
+		button.setText(str(button.text())+'\n'+player.name+'[✓]')
 		#print(self.jeopardy_button
 
 
@@ -49,9 +103,9 @@ class Jeopardy(QtGui.QWidget):
 
 	def player_pressed(self,player_id):
 		if self.listen:
-			print(player_id)
 			self.listen = False
 			self.set_response(True)
+			self.active_player = player_id
 
 
 	def set_response(self,a):
@@ -74,7 +128,7 @@ class Jeopardy(QtGui.QWidget):
 		self.grid = QtGui.QGridLayout(self)
 
 		# Create the Jeopardy window
-		jeopardy_window = QtGui.QHBoxLayout(self)
+		jeopardy_window = QtGui.QHBoxLayout(None)
 		jeopardy_category_layouts = []
 		jeopardy_categories = ['test1','test2','test3','test4','test5']
 		self.jeopardy_category_label = []
@@ -82,7 +136,7 @@ class Jeopardy(QtGui.QWidget):
 		# Create the Jeopardy buttons
 		self.jeopardy_button = []
 		for i in range(5):
-			jeopardy_category_layouts.append(QtGui.QVBoxLayout(self))
+			jeopardy_category_layouts.append(QtGui.QVBoxLayout(None))
 			self.jeopardy_category_label.append(QtGui.QLabel(jeopardy_categories[i]))
 			#self.jeopardy_category_label[i].setMargin(10)
 			jeopardy_category_layouts[i].addWidget(self.jeopardy_category_label[i])
@@ -95,13 +149,13 @@ class Jeopardy(QtGui.QWidget):
 			jeopardy_window.addLayout(jeopardy_category_layouts[i])
 
 		# Create the Answer section
-		answer_section_layout = QtGui.QHBoxLayout(self)
+		answer_section_layout = QtGui.QHBoxLayout(None)
 
-		answer_label = QtGui.QLabel('Answer')
-		answer_section_layout.addWidget(answer_label)
+		answer_box = QtGui.QGroupBox('Answer')
+		answer_box.setLayout(answer_section_layout)
 
 		# Create the Repsonse section
-		response_section_layout = QtGui.QVBoxLayout(self)
+		response_section_layout = QtGui.QVBoxLayout(None)
 		self.correct_button = QtGui.QPushButton('CORRECT')
 		self.correct_button.setPalette(QtGui.QPalette(QtGui.QColor(0,255,0)))
 		self.wrong_button = QtGui.QPushButton('WRONG')
@@ -114,39 +168,31 @@ class Jeopardy(QtGui.QWidget):
 		response_section_layout.addWidget(self.reopen_button)
 
 		# Create the Player section
-		player_section_layout = QtGui.QVBoxLayout(self)
+		player_section_layout = QtGui.QVBoxLayout(None)
+		player_box = QtGui.QGroupBox('Player')
+		player_box.setLayout(player_section_layout)
 
-		player1_section_layout = QtGui.QGridLayout(self)
-		player1_name_label = QtGui.QLabel('Name')
-		player1_points_label = QtGui.QLabel('Points')
-		player1_name_text = QtGui.QLineEdit()
-		player1_points_text = QtGui.QLineEdit()
-		player1_points_text.setReadOnly(True)
-		player1_widget = QtGui.QWidget(self)
-		player1_widget.setPalette(QtGui.QPalette(QtGui.QColor(0,0,255)))
-		player1_section_layout.addWidget(player1_name_label,0,0)
-		player1_section_layout.addWidget(player1_name_text,0,1,1,2)
-		player1_section_layout.addWidget(player1_points_label,1,0)
-		player1_section_layout.addWidget(player1_points_text,1,1,1,2)
+		self.player = {}
+		self.player['p1'] = self.Player(self.app,'Player 1',[0,0,255])
+		self.player['p2'] = self.Player(self.app,'Player 2',[255,0,0])
+		self.player['p3'] = self.Player(self.app,'Player 3',[0,255,0])
+		self.player['p4'] = self.Player(self.app,'Player 4',[255,255,0])
 
-		player1_box = QtGui.QGroupBox('Player 1')
-		player1_box.setLayout(player1_section_layout)
-		player1_box.setAutoFillBackground(True)
-		player1_box.setPalette(QtGui.QPalette(QtGui.QColor(0,0,255)))
-
-		player_section_layout.addWidget(player1_box)
+		player_section_layout.addWidget(self.player['p1'].box)
+		player_section_layout.addWidget(self.player['p2'].box)
+		player_section_layout.addWidget(self.player['p3'].box)
+		player_section_layout.addWidget(self.player['p4'].box)
 
 		# Create the Global Butten section
-		global_button_layout = QtGui.QVBoxLayout(self)
+		global_button_layout = QtGui.QVBoxLayout(None)
 
 		quit = QtGui.QPushButton('quit')
-		quit.setFixedHeight(50)
 		global_button_layout.addWidget(quit)
 
 		# Add everything to the grid
 		self.grid.addLayout(jeopardy_window,0,0,4,4)
-		self.grid.addLayout(answer_section_layout,5,1,1,3)
-		self.grid.addLayout(player_section_layout,0,5,4,1)
+		self.grid.addWidget(answer_box,5,1,1,3)
+		self.grid.addWidget(player_box,0,5,4,1)
 		self.grid.addLayout(global_button_layout,5,5)
 		self.grid.addLayout(response_section_layout,5,0)
 
