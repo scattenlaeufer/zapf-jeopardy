@@ -4,6 +4,13 @@ import sys
 from PyQt4 import QtGui, QtCore, Qt
 
 name = 'ZaPF-Jeopardy (v0.1)'
+points_factor = 1
+
+class Jeopardy_Wall(QtGui.QWidget):
+
+	def __init__(self):
+		super(Jeopardy_Wall,self).__init__()
+
 
 class Jeopardy(QtGui.QWidget):
 
@@ -75,30 +82,38 @@ class Jeopardy(QtGui.QWidget):
 		self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
 		self.listen = True
 		self.set_field_activity(False)
+		self.reopen_button.setEnabled(True)
 
 
 	def correct(self):
 		self.set_response(False)
 		self.set_field_activity(True)
+		self.reopen_button.setEnabled(False)
 		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
 		player = self.player[self.active_player]
 		button.setPalette(player.color)
-		button.setText(str(button.text())+'\n'+player.name+'[✓]')
-		#print(self.jeopardy_button
+		button.setText(str(button.text())+'\n'+player.name+' [✓]')
+		player.add_points((self.current_field[1]+1)*points_factor)
 
 
 	def wrong(self):
-		print('WRONG!')
-		self.jeopardy_button[self.current_field[0]][self.current_field[1]].setPalette(self.palette())
 		self.set_response(False)
-		self.set_field_activity(True)
+		self.set_field_activity(False)
+		self.listen = True
+		player = self.player[self.active_player]
+		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
+		button.setText(str(button.text())+'\n'+player.name+' [✗]')
+		player.add_points((self.current_field[1]+1)*points_factor*-1)
 
 
 	def reopen(self):
-		print('REOPEN')
-		self.jeopardy_button[self.current_field[0]][self.current_field[1]].setPalette(self.palette())
-		self.set_response(False)
-		self.set_field_activity(True)
+		if self.listen:
+			self.set_response(False)
+			self.set_field_activity(True)
+			self.reopen_button.setEnabled(False)
+		else:
+			self.listen = True
+			self.set_response(False)
 
 
 	def player_pressed(self,player_id):
@@ -111,7 +126,7 @@ class Jeopardy(QtGui.QWidget):
 	def set_response(self,a):
 		self.correct_button.setEnabled(a)
 		self.wrong_button.setEnabled(a)
-		self.reopen_button.setEnabled(a)
+#		self.reopen_button.setEnabled(a)
 		
 
 	def set_field_activity(self,a):
@@ -142,7 +157,7 @@ class Jeopardy(QtGui.QWidget):
 			jeopardy_category_layouts[i].addWidget(self.jeopardy_category_label[i])
 			self.jeopardy_button.append([])
 			for j in range(5):
-				self.jeopardy_button[i].append(QtGui.QPushButton(str(j+1)))
+				self.jeopardy_button[i].append(QtGui.QPushButton(str((j+1)*points_factor)))
 				self.jeopardy_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
 				jeopardy_category_layouts[i].addWidget(self.jeopardy_button[i][j])
 				self.app.connect(self.jeopardy_button[i][j],Qt.SIGNAL('pressed()'),lambda i=[i,j]: self.select_field(i[0],i[1]))
@@ -162,6 +177,7 @@ class Jeopardy(QtGui.QWidget):
 		self.wrong_button.setPalette(QtGui.QPalette(QtGui.QColor(255,0,0)))
 		self.reopen_button = QtGui.QPushButton('REOPEN')
 		self.set_response(False)
+		self.reopen_button.setEnabled(False)
 
 		response_section_layout.addWidget(self.correct_button)
 		response_section_layout.addWidget(self.wrong_button)
@@ -218,6 +234,10 @@ class Jeopardy(QtGui.QWidget):
 		self.setWindowTitle(name)
 		self.show()
 #		self.showMaximized()
+
+		self.wall = Jeopardy_Wall()
+		self.wall.setLayout(jeopardy_window)
+		self.wall.show()
 
 
 def main():
