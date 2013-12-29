@@ -8,8 +8,41 @@ points_factor = 1
 
 class Jeopardy_Wall(QtGui.QWidget):
 
+	def set_categories(self,categories):
+		for i in range(len(categories)):
+			self.wall_category_boxes[i].setTitle(categories[i])
+
+
 	def __init__(self):
 		super(Jeopardy_Wall,self).__init__()
+		self.grid = QtGui.QGridLayout(self)
+		
+		jeopardy_wall_layout = QtGui.QHBoxLayout(None)
+
+		self.wall_button = []
+		self.wall_category_boxes = []
+		self.wall_category_layouts = []
+
+		for i in range(5):
+			self.wall_button.append([])
+			self.wall_category_layouts.append(QtGui.QVBoxLayout(None))
+			self.wall_category_boxes.append(QtGui.QGroupBox(''))
+			self.wall_category_boxes[i].setLayout(self.wall_category_layouts[i])
+			jeopardy_wall_layout.addWidget(self.wall_category_boxes[i])
+			for j in range(5):
+				self.wall_button[i].append(QtGui.QPushButton(str((j+1)*points_factor)))
+				self.wall_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
+				self.wall_category_layouts[i].addWidget(self.wall_button[i][j])
+			
+		self.player_wall_layout = QtGui.QHBoxLayout(None)
+
+		jeopardy_wall_box = QtGui.QGroupBox('Jeopardy board')
+		jeopardy_wall_box.setLayout(jeopardy_wall_layout)
+		player_wall_box = QtGui.QGroupBox('Player')
+		player_wall_box.setLayout(self.player_wall_layout)
+
+		self.grid.addWidget(jeopardy_wall_box,0,0,8,0)
+		self.grid.addWidget(player_wall_box,9,0)
 
 
 class Jeopardy(QtGui.QWidget):
@@ -21,6 +54,7 @@ class Jeopardy(QtGui.QWidget):
 			if ok and text != '':
 				self.name = text
 				self.name_text.setText(self.name)
+				self.wall_box.setTitle(self.name)
 
 
 		def bonus(self):
@@ -35,6 +69,7 @@ class Jeopardy(QtGui.QWidget):
 		def add_points(self,points):
 			self.points += points
 			self.points_text.setText(str(self.points))
+			self.wall_points_text.setText(str(self.points))
 
 		def __init__(self,app,name,color,points=0):
 			self.app = app
@@ -65,6 +100,19 @@ class Jeopardy(QtGui.QWidget):
 			self.box.setLayout(layout)
 			self.box.setAutoFillBackground(True)
 			self.box.setPalette(self.color)
+
+			wall_layout = QtGui.QHBoxLayout(None)
+			wall_points_label = QtGui.QLabel('points')
+			self.wall_points_text = QtGui.QLineEdit()
+			self.wall_points_text.setReadOnly(True)
+			self.wall_points_text.setText(str(self.points))
+			wall_layout.addWidget(wall_points_label)
+			wall_layout.addWidget(self.wall_points_text)
+
+			self.wall_box = QtGui.QGroupBox(name)
+			self.wall_box.setLayout(wall_layout)
+			self.wall_box.setAutoFillBackground(True)
+			self.wall_box.setPalette(self.color)
 
 			self.app.connect(rename_button,Qt.SIGNAL('pressed()'),lambda: self.rename())
 			self.app.connect(bonus_button,Qt.SIGNAL('pressed()'),lambda: self.bonus())
@@ -144,24 +192,26 @@ class Jeopardy(QtGui.QWidget):
 
 		# Create the Jeopardy window
 		jeopardy_window = QtGui.QHBoxLayout(None)
+		jeopardy_board_box = QtGui.QGroupBox('Jeopardy board')
+		jeopardy_board_box.setLayout(jeopardy_window)
 		jeopardy_category_layouts = []
 		jeopardy_categories = ['test1','test2','test3','test4','test5']
-		self.jeopardy_category_label = []
+		self.jeopardy_category_boxes = []
 
 		# Create the Jeopardy buttons
 		self.jeopardy_button = []
 		for i in range(5):
 			jeopardy_category_layouts.append(QtGui.QVBoxLayout(None))
-			self.jeopardy_category_label.append(QtGui.QLabel(jeopardy_categories[i]))
-			#self.jeopardy_category_label[i].setMargin(10)
-			jeopardy_category_layouts[i].addWidget(self.jeopardy_category_label[i])
+			self.jeopardy_category_boxes.append(QtGui.QGroupBox(jeopardy_categories[i]))
 			self.jeopardy_button.append([])
 			for j in range(5):
 				self.jeopardy_button[i].append(QtGui.QPushButton(str((j+1)*points_factor)))
 				self.jeopardy_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
 				jeopardy_category_layouts[i].addWidget(self.jeopardy_button[i][j])
 				self.app.connect(self.jeopardy_button[i][j],Qt.SIGNAL('pressed()'),lambda i=[i,j]: self.select_field(i[0],i[1]))
-			jeopardy_window.addLayout(jeopardy_category_layouts[i])
+			#jeopardy_category_layouts[i].addWidget(self.jeopardy_category_boxes[i])
+			self.jeopardy_category_boxes[i].setLayout(jeopardy_category_layouts[i])
+			jeopardy_window.addWidget(self.jeopardy_category_boxes[i])
 
 		# Create the Answer section
 		answer_section_layout = QtGui.QHBoxLayout(None)
@@ -206,7 +256,7 @@ class Jeopardy(QtGui.QWidget):
 		global_button_layout.addWidget(quit)
 
 		# Add everything to the grid
-		self.grid.addLayout(jeopardy_window,0,0,4,4)
+		self.grid.addWidget(jeopardy_board_box,0,0,4,4)
 		self.grid.addWidget(answer_box,5,1,1,3)
 		self.grid.addWidget(player_box,0,5,4,1)
 		self.grid.addLayout(global_button_layout,5,5)
@@ -236,8 +286,13 @@ class Jeopardy(QtGui.QWidget):
 #		self.showMaximized()
 
 		self.wall = Jeopardy_Wall()
-		self.wall.setLayout(jeopardy_window)
+		self.wall.set_categories(jeopardy_categories)
 		self.wall.show()
+
+		self.wall.player_wall_layout.addWidget(self.player['p1'].wall_box)
+		self.wall.player_wall_layout.addWidget(self.player['p2'].wall_box)
+		self.wall.player_wall_layout.addWidget(self.player['p3'].wall_box)
+		self.wall.player_wall_layout.addWidget(self.player['p4'].wall_box)
 
 
 def main():
