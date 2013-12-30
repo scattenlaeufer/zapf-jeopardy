@@ -1,1 +1,5 @@
-Aus der dummer Idee geboren, auf der ZaPF eine Jeopardy zu haben, könnte dies einmal die genutzte Software werden.
+Born from the idea to have a Jeopardy at the next ZaPF, this might be the used software.
+
+Start with "./jeopardy.py [game-data]"
+
+Player buzzer are the 1-key for player 1 and so on.
