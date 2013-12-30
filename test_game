@@ -1,0 +1,152 @@
+[
+    {
+        "category": "Category 1", 
+        "level": [
+            {
+                "answer": "Answer 1", 
+                "question": "Question 1", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 2", 
+                "question": "Question 2", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 3", 
+                "question": "Question 3", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 4", 
+                "question": "Question 4", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 5", 
+                "question": "Question 5", 
+                "type": "text"
+            }
+        ]
+    }, 
+    {
+        "category": "Category 2", 
+        "level": [
+            {
+                "answer": "Answer 1", 
+                "question": "Question 1", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 2", 
+                "question": "Question 2", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 3", 
+                "question": "Question 3", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 4", 
+                "question": "Question 4", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 5", 
+                "question": "Question 5", 
+                "type": "text"
+            }
+        ]
+    }, 
+    {
+        "category": "Category 3", 
+        "level": [
+            {
+                "answer": "Answer 1", 
+                "question": "Question 1", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 2", 
+                "question": "Question 2", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 3", 
+                "question": "Question 3", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 4", 
+                "question": "Question 4", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 5", 
+                "question": "Question 5", 
+                "type": "text"
+            }
+        ]
+    }, 
+    {
+        "category": "Category 4", 
+        "level": [
+            {
+                "answer": "Answer 1", 
+                "question": "Question 1", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 2", 
+                "question": "Question 2", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 3", 
+                "question": "Question 3", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 4", 
+                "question": "Question 4", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 5", 
+                "question": "Question 5", 
+                "type": "text"
+            }
+        ]
+    }, 
+    {
+        "category": "Category 5", 
+        "level": [
+            {
+                "answer": "Answer 1", 
+                "question": "Question 1", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 2", 
+                "question": "Question 2", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 3", 
+                "question": "Question 3", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 4", 
+                "question": "Question 4", 
+                "type": "text"
+            }, 
+            {
+                "answer": "Answer 5", 
+                "question": "Question 5", 
+                "type": "text"
+            }
+        ]
+    }
+]
