@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys, json, subprocess
+from textwrap import wrap
 from PyQt4 import QtGui, QtCore, Qt
 
 name = 'ZaPF-Jeopardy (v0.1)'
@@ -8,16 +9,20 @@ points_factor = 1
 
 class Jeopardy_Wall(QtGui.QWidget):
 
+	def resizeEvent(self,r):
+			self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
+
+
 	def set_categories(self,categories):
 		for i in range(len(categories)):
 			self.wall_category_boxes[i].setTitle(categories[i])
 
 
-	def present_text_answer(self,type,answer):
+	def present_answer(self,type,answer):
 		if type == 'text':
 			self.jeopardy_wall_box.setHidden(True)
 			self.answer_box.setHidden(False)
-			self.answer_label.setText(answer)
+			self.answer_label.setText('\n'.join(wrap(answer,50)))
 
 
 	def clear_answer_section(self,type):
@@ -57,8 +62,9 @@ class Jeopardy_Wall(QtGui.QWidget):
 
 		answer_layout = QtGui.QVBoxLayout(None)
 		self.answer_label = QtGui.QLabel('')
-		self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
-		self.answer_label.setMaximumWidth(800)
+		answer_font = self.font()
+		answer_font.setPointSize(20)
+		self.answer_label.setFont(answer_font)
 		answer_layout.addWidget(self.answer_label)
 		self.answer_box = QtGui.QGroupBox('Answer')
 		self.answer_box.setLayout(answer_layout)
@@ -149,6 +155,10 @@ class Jeopardy(QtGui.QWidget):
 			self.app.quit()
 
 
+	def wrap(self,text):
+		return '\n'.join(wrap(text,110))
+
+
 	def select_field(self,category_id,level):
 		self.current_field = [category_id,level]
 		self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
@@ -156,9 +166,9 @@ class Jeopardy(QtGui.QWidget):
 		self.set_field_activity(False)
 		self.reopen_button.setEnabled(True)
 		if self.game_data[category_id]['level'][level]['type'] == 'text':
-			self.wall.present_text_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
-			self.answer_label.setText(self.game_data[category_id]['level'][level]['answer'])
-			self.question_label.setText(self.game_data[category_id]['level'][level]['question'])
+			self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
+			self.answer_label.setText(self.wrap(self.game_data[category_id]['level'][level]['answer'],))
+			self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
 
 		self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 
@@ -215,6 +225,8 @@ class Jeopardy(QtGui.QWidget):
 		button.setText(title)
 		self.wall.wall_button[self.current_field[0]][self.current_field[1]].setText(title)
 		player.add_points((self.current_field[1]+1)*points_factor*-1)
+		self.reset_player_color()
+		self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
 	def reopen(self):
@@ -223,6 +235,7 @@ class Jeopardy(QtGui.QWidget):
 			self.set_field_activity(True)
 			self.reopen_button.setEnabled(False)
 			self.clear_answer_section()
+			self.music.kill()
 		else:
 			self.reset_player_color()
 			self.listen = True

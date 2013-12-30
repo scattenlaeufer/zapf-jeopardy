@@ -4,16 +4,17 @@ import sys, json
 
 game = [{} for i in range(5)]
 
-def create_answer(type,answer,question):
+def create_answer(type,answer,question,double_jeopardy=False):
 	out = {}
 	out['type'] = type
 	out['answer'] = answer
 	out['question'] = question
+	out['double_jeopardy'] = double_jeopardy
 	return out
 
 game[0]['category'] = 'Category 1'
 game[0]['level'] = []
-game[0]['level'].append(create_answer('text','Answer 1','Question 1'))
+game[0]['level'].append(create_answer('text','Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd','Question 1'))
 game[0]['level'].append(create_answer('text','Answer 2','Question 2'))
 game[0]['level'].append(create_answer('text','Answer 3','Question 3'))
 game[0]['level'].append(create_answer('text','Answer 4','Question 4'))
