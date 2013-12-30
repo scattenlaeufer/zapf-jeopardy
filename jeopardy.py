@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys
+import sys, json
 from PyQt4 import QtGui, QtCore, Qt
 
 name = 'ZaPF-Jeopardy (v0.1)'
@@ -12,6 +12,18 @@ class Jeopardy_Wall(QtGui.QWidget):
 		for i in range(len(categories)):
 			self.wall_category_boxes[i].setTitle(categories[i])
 
+
+	def present_text_answer(self,type,answer):
+		if type == 'text':
+			self.jeopardy_wall_box.setHidden(True)
+			self.answer_box.setHidden(False)
+			self.answer_label.setText(answer)
+
+
+	def clear_answer_section(self,type):
+		if type == 'text':
+			self.answer_box.setHidden(True)
+			self.jeopardy_wall_box.setHidden(False)
 
 	def __init__(self):
 		super(Jeopardy_Wall,self).__init__()
@@ -36,12 +48,24 @@ class Jeopardy_Wall(QtGui.QWidget):
 			
 		self.player_wall_layout = QtGui.QHBoxLayout(None)
 
-		jeopardy_wall_box = QtGui.QGroupBox('Jeopardy board')
-		jeopardy_wall_box.setLayout(jeopardy_wall_layout)
+		self.jeopardy_wall_box = QtGui.QGroupBox('Jeopardy board')
+		self.jeopardy_wall_box.setLayout(jeopardy_wall_layout)
+
+
 		player_wall_box = QtGui.QGroupBox('Player')
 		player_wall_box.setLayout(self.player_wall_layout)
 
-		self.grid.addWidget(jeopardy_wall_box,0,0,8,0)
+		answer_layout = QtGui.QVBoxLayout(None)
+		self.answer_label = QtGui.QLabel('')
+		self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
+		self.answer_label.setMaximumWidth(800)
+		answer_layout.addWidget(self.answer_label)
+		self.answer_box = QtGui.QGroupBox('Answer')
+		self.answer_box.setLayout(answer_layout)
+		self.answer_box.setHidden(True)
+
+		self.grid.addWidget(self.answer_box,0,0,8,0)
+		self.grid.addWidget(self.jeopardy_wall_box,0,0,8,0)
 		self.grid.addWidget(player_wall_box,9,0)
 
 
@@ -131,6 +155,35 @@ class Jeopardy(QtGui.QWidget):
 		self.listen = True
 		self.set_field_activity(False)
 		self.reopen_button.setEnabled(True)
+		if self.game_data[category_id]['level'][level]['type'] == 'text':
+			self.wall.present_text_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
+			self.answer_label.setText(self.game_data[category_id]['level'][level]['answer'])
+			self.question_label.setText(self.game_data[category_id]['level'][level]['question'])
+
+
+	def player_pressed(self,player_id):
+		if self.listen:
+			self.listen = False
+			self.set_response(True)
+			self.active_player = player_id
+			for i in self.player:
+				if i != player_id:
+					self.player[i].wall_box.setPalette(self.palette())
+					self.player[i].box.setPalette(self.palette())
+
+
+	def reset_player_color(self):
+		for i in self.player:
+			self.player[i].wall_box.setPalette(self.player[i].color)
+			self.player[i].box.setPalette(self.player[i].color)
+
+
+	def clear_answer_section(self):
+		self.reset_player_color()
+		if self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'] == 'text':
+			self.answer_label.setText('')
+			self.question_label.setText('')
+			self.wall.clear_answer_section(self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'])
 
 
 	def correct(self):
@@ -138,10 +191,15 @@ class Jeopardy(QtGui.QWidget):
 		self.set_field_activity(True)
 		self.reopen_button.setEnabled(False)
 		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
+		wall_button = self.wall.wall_button[self.current_field[0]][self.current_field[1]]
 		player = self.player[self.active_player]
+		title = str(button.text())+'\n'+player.name+' [✓]'
 		button.setPalette(player.color)
-		button.setText(str(button.text())+'\n'+player.name+' [✓]')
+		button.setText(title)
+		wall_button.setPalette(player.color)
+		wall_button.setText(title)
 		player.add_points((self.current_field[1]+1)*points_factor)
+		self.clear_answer_section()
 
 
 	def wrong(self):
@@ -150,7 +208,9 @@ class Jeopardy(QtGui.QWidget):
 		self.listen = True
 		player = self.player[self.active_player]
 		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
-		button.setText(str(button.text())+'\n'+player.name+' [✗]')
+		title = str(button.text())+'\n'+player.name+' [✗]'
+		button.setText(title)
+		self.wall.wall_button[self.current_field[0]][self.current_field[1]].setText(title)
 		player.add_points((self.current_field[1]+1)*points_factor*-1)
 
 
@@ -159,23 +219,17 @@ class Jeopardy(QtGui.QWidget):
 			self.set_response(False)
 			self.set_field_activity(True)
 			self.reopen_button.setEnabled(False)
+			self.clear_answer_section()
 		else:
+			self.reset_player_color()
 			self.listen = True
 			self.set_response(False)
-
-
-	def player_pressed(self,player_id):
-		if self.listen:
-			self.listen = False
-			self.set_response(True)
-			self.active_player = player_id
 
 
 	def set_response(self,a):
 		self.correct_button.setEnabled(a)
 		self.wrong_button.setEnabled(a)
-#		self.reopen_button.setEnabled(a)
-		
+
 
 	def set_field_activity(self,a):
 		for i in self.jeopardy_button:
@@ -183,10 +237,19 @@ class Jeopardy(QtGui.QWidget):
 				j.setEnabled(a)
 
 
-	def __init__(self,app):
+	def __init__(self,app,game_file):
 		super(Jeopardy,self).__init__()
 		print(name)
 		self.app = app
+
+		game_str = ''
+		with open(game_file,'r') as file:
+			game_str = file.read()
+		self.game_data = json.loads(game_str)
+
+		jeopardy_categories = []
+		for i in self.game_data:
+			jeopardy_categories.append(i['category'])
 
 		self.grid = QtGui.QGridLayout(self)
 
@@ -195,7 +258,6 @@ class Jeopardy(QtGui.QWidget):
 		jeopardy_board_box = QtGui.QGroupBox('Jeopardy board')
 		jeopardy_board_box.setLayout(jeopardy_window)
 		jeopardy_category_layouts = []
-		jeopardy_categories = ['test1','test2','test3','test4','test5']
 		self.jeopardy_category_boxes = []
 
 		# Create the Jeopardy buttons
@@ -214,10 +276,23 @@ class Jeopardy(QtGui.QWidget):
 			jeopardy_window.addWidget(self.jeopardy_category_boxes[i])
 
 		# Create the Answer section
-		answer_section_layout = QtGui.QHBoxLayout(None)
+		self.answer_label = QtGui.QLabel('')
+		self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
+		answer_layout = QtGui.QHBoxLayout(None)
+		answer_layout.addWidget(self.answer_label)
+		answer_box = QtGui.QGroupBox('presented answer')
+		answer_box.setLayout(answer_layout)
 
-		answer_box = QtGui.QGroupBox('Answer')
-		answer_box.setLayout(answer_section_layout)
+		self.question_label = QtGui.QLabel('')
+		self.question_label.setAlignment(QtCore.Qt.AlignCenter)
+		question_layout = QtGui.QHBoxLayout(None)
+		question_layout.addWidget(self.question_label)
+		question_box = QtGui.QGroupBox('suggested question')
+		question_box.setLayout(question_layout)
+
+		answer_section_layout = QtGui.QVBoxLayout(None)
+		answer_section_layout.addWidget(answer_box)
+		answer_section_layout.addWidget(question_box)
 
 		# Create the Repsonse section
 		response_section_layout = QtGui.QVBoxLayout(None)
@@ -257,7 +332,7 @@ class Jeopardy(QtGui.QWidget):
 
 		# Add everything to the grid
 		self.grid.addWidget(jeopardy_board_box,0,0,4,4)
-		self.grid.addWidget(answer_box,5,1,1,3)
+		self.grid.addLayout(answer_section_layout,5,1,1,3)
 		self.grid.addWidget(player_box,0,5,4,1)
 		self.grid.addLayout(global_button_layout,5,5)
 		self.grid.addLayout(response_section_layout,5,0)
@@ -282,23 +357,25 @@ class Jeopardy(QtGui.QWidget):
 
 		self.setLayout(self.grid)
 		self.setWindowTitle(name)
-		self.show()
-#		self.showMaximized()
 
 		self.wall = Jeopardy_Wall()
 		self.wall.set_categories(jeopardy_categories)
-		self.wall.show()
 
 		self.wall.player_wall_layout.addWidget(self.player['p1'].wall_box)
 		self.wall.player_wall_layout.addWidget(self.player['p2'].wall_box)
 		self.wall.player_wall_layout.addWidget(self.player['p3'].wall_box)
 		self.wall.player_wall_layout.addWidget(self.player['p4'].wall_box)
 
+		self.show()
+#		self.showMaximized()
+		self.wall.show()
+
 
 def main():
 	app = QtGui.QApplication(sys.argv)
-	jeopardy = Jeopardy(app)
-	sys.exit(app.exec_())
+	if len(sys.argv) == 2:
+		jeopardy = Jeopardy(app,sys.argv[1])
+		sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
