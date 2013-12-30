@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, json
+import sys, json, subprocess
 from PyQt4 import QtGui, QtCore, Qt
 
 name = 'ZaPF-Jeopardy (v0.1)'
@@ -160,9 +160,12 @@ class Jeopardy(QtGui.QWidget):
 			self.answer_label.setText(self.game_data[category_id]['level'][level]['answer'])
 			self.question_label.setText(self.game_data[category_id]['level'][level]['question'])
 
+		self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+
 
 	def player_pressed(self,player_id):
 		if self.listen:
+			self.music.kill()
 			self.listen = False
 			self.set_response(True)
 			self.active_player = player_id
