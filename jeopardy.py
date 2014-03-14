@@ -1,8 +1,13 @@
 #!/usr/bin/python
 
-import sys, json, subprocess
+import sys, json, subprocess, random
 from textwrap import wrap
 from PyQt4 import QtGui, QtCore, Qt
+
+#TODO:
+#	Bilder als Antwort
+#	Videos als Antwort
+#	Speichern
 
 name = 'ZaPF-Jeopardy (v0.1)'
 points_factor = 1
@@ -149,10 +154,15 @@ class Jeopardy(QtGui.QWidget):
 
 
 	def quit(self):
-		message = message = QtGui.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+		message = QtGui.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
 		resp = message.exec_()
 		if resp == 16384:
 			self.app.quit()
+
+
+	def randomize_player(self):
+		self.active_player = 'p' + str(random.randint(1,4))
+		self.random_player_button.setPalette(self.player[self.active_player].color)
 
 
 	def wrap(self,text):
@@ -160,22 +170,36 @@ class Jeopardy(QtGui.QWidget):
 
 
 	def select_field(self,category_id,level):
-		self.current_field = [category_id,level]
-		self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
-		self.listen = True
-		self.set_field_activity(False)
-		self.reopen_button.setEnabled(True)
-		if self.game_data[category_id]['level'][level]['type'] == 'text':
-			self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
-			self.answer_label.setText(self.wrap(self.game_data[category_id]['level'][level]['answer'],))
-			self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
+		if self.active_player != None:
+			if self.game_data[category_id]['level'][level]['double_jeopardy']:
+				self.double_jeopardy = True
+				ok = False
+				while not ok:
+					self.points_set,ok = QtGui.QInputDialog().getInt(None,'DOUBLE JEOPARDY','double jeopardy\nbet '+str((level+1)*points_factor)+' to '+str((level+1)*2*points_factor)+' points',(level+1)*points_factor,(1+level)*points_factor,(1+level)*points_factor*2)
 
-		self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+			self.current_field = [category_id,level]
+			self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
+			if self.double_jeopardy:
+				self.player_pressed(self.active_player)
+			else:
+				self.listen = True
+				self.set_field_activity(False)
+				self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+			self.reopen_button.setEnabled(True)
+			if self.game_data[category_id]['level'][level]['type'] == 'text':
+				self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
+				self.answer_label.setText(self.wrap(self.game_data[category_id]['level'][level]['answer'],))
+				self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
+
+		else:
+			message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
+			message.exec_()
 
 
 	def player_pressed(self,player_id):
 		if self.listen:
 			self.music.kill()
+		if self.listen or self.double_jeopardy:
 			self.listen = False
 			self.set_response(True)
 			self.active_player = player_id
@@ -206,25 +230,35 @@ class Jeopardy(QtGui.QWidget):
 		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
 		wall_button = self.wall.wall_button[self.current_field[0]][self.current_field[1]]
 		player = self.player[self.active_player]
-		title = str(button.text())+'\n'+player.name+' [✓]'
+		if self.double_jeopardy:
+			title = str(button.text())+'\n'+player.name+' [✓] [DJ]'
+			player.add_points((self.points_set)*points_factor)
+			self.double_jeopardy = False
+		else:
+			title = str(button.text())+'\n'+player.name+' [✓]'
+			player.add_points((self.current_field[1]+1)*points_factor)
 		button.setPalette(player.color)
 		button.setText(title)
 		wall_button.setPalette(player.color)
 		wall_button.setText(title)
-		player.add_points((self.current_field[1]+1)*points_factor)
 		self.clear_answer_section()
 
 
-	def wrong(self):
+	def wrong(self,points_set=0):
 		self.set_response(False)
 		self.set_field_activity(False)
 		self.listen = True
 		player = self.player[self.active_player]
 		button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
-		title = str(button.text())+'\n'+player.name+' [✗]'
+		if self.double_jeopardy:
+			title = str(button.text())+'\n'+player.name+' [✗] [DJ]'
+			player.add_points((self.points_set)*points_factor*-1)
+			self.double_jeopardy = False
+		else:
+			title = str(button.text())+'\n'+player.name+' [✗]'
+			player.add_points((self.current_field[1]+1)*points_factor*-1)
 		button.setText(title)
 		self.wall.wall_button[self.current_field[0]][self.current_field[1]].setText(title)
-		player.add_points((self.current_field[1]+1)*points_factor*-1)
 		self.reset_player_color()
 		self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 
@@ -240,6 +274,9 @@ class Jeopardy(QtGui.QWidget):
 			self.reset_player_color()
 			self.listen = True
 			self.set_response(False)
+			self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+			if self.double_jeopardy:
+				self.double_jeopardy = False
 
 
 	def set_response(self,a):
@@ -257,6 +294,8 @@ class Jeopardy(QtGui.QWidget):
 		super(Jeopardy,self).__init__()
 		print(name)
 		self.app = app
+		self.double_jeopardy = False
+		self.active_player = None
 
 		game_str = ''
 		with open(game_file,'r') as file:
@@ -287,7 +326,6 @@ class Jeopardy(QtGui.QWidget):
 				self.jeopardy_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
 				jeopardy_category_layouts[i].addWidget(self.jeopardy_button[i][j])
 				self.app.connect(self.jeopardy_button[i][j],Qt.SIGNAL('pressed()'),lambda i=[i,j]: self.select_field(i[0],i[1]))
-			#jeopardy_category_layouts[i].addWidget(self.jeopardy_category_boxes[i])
 			self.jeopardy_category_boxes[i].setLayout(jeopardy_category_layouts[i])
 			jeopardy_window.addWidget(self.jeopardy_category_boxes[i])
 
@@ -344,6 +382,9 @@ class Jeopardy(QtGui.QWidget):
 		global_button_layout = QtGui.QVBoxLayout(None)
 
 		quit = QtGui.QPushButton('quit')
+		self.random_player_button = QtGui.QPushButton('random player')
+		self.random_player_button.setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
+		global_button_layout.addWidget(self.random_player_button)
 		global_button_layout.addWidget(quit)
 
 		# Add everything to the grid
@@ -362,9 +403,12 @@ class Jeopardy(QtGui.QWidget):
 
 		# Connecitong stuff to functions
 		self.app.connect(quit,Qt.SIGNAL('pressed()'),lambda: self.quit())
+		self.app.connect(self.random_player_button,Qt.SIGNAL('pressed()'),lambda: self.randomize_player())
 		self.app.connect(self.correct_button,Qt.SIGNAL('pressed()'),lambda: self.correct())
 		self.app.connect(self.wrong_button,Qt.SIGNAL('pressed()'),lambda: self.wrong())
 		self.app.connect(self.reopen_button,Qt.SIGNAL('pressed()'),lambda: self.reopen())
+
+		self.randomize_player()
 
 		self.app.connect(player_1_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p1'))
 		self.app.connect(player_2_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p2'))

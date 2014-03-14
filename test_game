@@ -4,26 +4,31 @@
         "level": [
             {
                 "answer": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd", 
+                "double_jeopardy": true, 
                 "question": "Question 1", 
                 "type": "text"
             }, 
             {
-                "answer": "Answer 2", 
-                "question": "Question 2", 
-                "type": "text"
+                "answer": "serenity.jpg", 
+                "double_jeopardy": false, 
+                "question": "what is the Serenity (Firefly class)", 
+                "type": "image"
             }, 
             {
                 "answer": "Answer 3", 
+                "double_jeopardy": false, 
                 "question": "Question 3", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 4", 
+                "double_jeopardy": false, 
                 "question": "Question 4", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 5", 
+                "double_jeopardy": false, 
                 "question": "Question 5", 
                 "type": "text"
             }
@@ -34,26 +39,31 @@
         "level": [
             {
                 "answer": "Answer 1", 
+                "double_jeopardy": false, 
                 "question": "Question 1", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 2", 
+                "double_jeopardy": false, 
                 "question": "Question 2", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 3", 
+                "double_jeopardy": false, 
                 "question": "Question 3", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 4", 
+                "double_jeopardy": false, 
                 "question": "Question 4", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 5", 
+                "double_jeopardy": false, 
                 "question": "Question 5", 
                 "type": "text"
             }
@@ -64,26 +74,31 @@
         "level": [
             {
                 "answer": "Answer 1", 
+                "double_jeopardy": false, 
                 "question": "Question 1", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 2", 
+                "double_jeopardy": false, 
                 "question": "Question 2", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 3", 
+                "double_jeopardy": false, 
                 "question": "Question 3", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 4", 
+                "double_jeopardy": false, 
                 "question": "Question 4", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 5", 
+                "double_jeopardy": false, 
                 "question": "Question 5", 
                 "type": "text"
             }
@@ -94,26 +109,31 @@
         "level": [
             {
                 "answer": "Answer 1", 
+                "double_jeopardy": false, 
                 "question": "Question 1", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 2", 
+                "double_jeopardy": false, 
                 "question": "Question 2", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 3", 
+                "double_jeopardy": false, 
                 "question": "Question 3", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 4", 
+                "double_jeopardy": false, 
                 "question": "Question 4", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 5", 
+                "double_jeopardy": false, 
                 "question": "Question 5", 
                 "type": "text"
             }
@@ -124,26 +144,31 @@
         "level": [
             {
                 "answer": "Answer 1", 
+                "double_jeopardy": false, 
                 "question": "Question 1", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 2", 
+                "double_jeopardy": false, 
                 "question": "Question 2", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 3", 
+                "double_jeopardy": false, 
                 "question": "Question 3", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 4", 
+                "double_jeopardy": false, 
                 "question": "Question 4", 
                 "type": "text"
             }, 
             {
                 "answer": "Answer 5", 
+                "double_jeopardy": false, 
                 "question": "Question 5", 
                 "type": "text"
             }
