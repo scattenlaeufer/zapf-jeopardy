@@ -12,11 +12,11 @@ def create_answer(type,answer,question,double_jeopardy=False):
 	out['double_jeopardy'] = double_jeopardy
 	return out
 
-game[0]['category'] = 'Category 1'
+game[0]['category'] = 'Das ist allen nur ein Test!'
 game[0]['level'] = []
 game[0]['level'].append(create_answer('text','Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd','Question 1',True))
 game[0]['level'].append(create_answer('image','serenity.jpg','what is the Serenity (Firefly class)'))
-game[0]['level'].append(create_answer('text','Answer 3','Question 3'))
+game[0]['level'].append(create_answer('image','50px_test.png','Test for small images'))
 game[0]['level'].append(create_answer('text','Answer 4','Question 4'))
 game[0]['level'].append(create_answer('text','Answer 5','Question 5'))
 

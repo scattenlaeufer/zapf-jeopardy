@@ -6,6 +6,7 @@ from PyQt4 import QtGui, QtCore, Qt
 
 #TODO:
 #	Bilder als Antwort
+#	Audio als Antwort
 #	Videos als Antwort
 #	Speichern
 
@@ -27,13 +28,41 @@ class Jeopardy_Wall(QtGui.QWidget):
 		if type == 'text':
 			self.jeopardy_wall_box.setHidden(True)
 			self.answer_box.setHidden(False)
+			self.answer_label.setHidden(False)
 			self.answer_label.setText('\n'.join(wrap(answer,50)))
+		elif type == 'image':
+			self.jeopardy_wall_box.setHidden(True)
+			self.answer_box.setHidden(False)
+			self.answer_label.setHidden(False)
+			image = QtGui.QPixmap(answer)
+			image_size = image.size()
+			label_size = self.answer_label.size()
+			image_ratio = float(image_size.width()) / float(image_size.height())
+			label_ratio = float(label_size.width()) / float(label_size.height())
+			scale_factor = 0.5
+			if image_size.width() > label_size.width() or image_size.height() > label_size.height():
+				if image_ratio < label_ratio:
+					image = image.scaledToHeight(label_size.height())
+				else:
+					image = image.scaledToWidth(label_size.width())
+			elif image_ratio > label_ratio and float(image_size.width()) / float(label_size.width()) < scale_factor:
+				image = image.scaledToWidth(int(label_size.width() * scale_factor))
+			elif float(image_size.height()) / float(label_size.height()) < scale_factor:
+				image = image.scaledToHeight(int(label_size.height() * scale_factor))
+			self.answer_label.setPixmap(image)
+		elif type == 'video':
+			pass
+		elif type == 'audio':
+			pass
 
 
 	def clear_answer_section(self,type):
 		if type == 'text':
-			self.answer_box.setHidden(True)
-			self.jeopardy_wall_box.setHidden(False)
+			self.answer_label.setHidden(True)
+		elif type == 'image':
+			self.answer_label.setHidden(True)
+		self.answer_box.setHidden(True)
+		self.jeopardy_wall_box.setHidden(False)
 
 	def __init__(self):
 		super(Jeopardy_Wall,self).__init__()
@@ -67,6 +96,7 @@ class Jeopardy_Wall(QtGui.QWidget):
 
 		answer_layout = QtGui.QVBoxLayout(None)
 		self.answer_label = QtGui.QLabel('')
+		self.answer_label.setHidden(True)
 		answer_font = self.font()
 		answer_font.setPointSize(20)
 		self.answer_label.setFont(answer_font)
@@ -184,12 +214,15 @@ class Jeopardy(QtGui.QWidget):
 			else:
 				self.listen = True
 				self.set_field_activity(False)
-				self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+				if self.music_checkbox.checkState() == 2:
+					self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 			self.reopen_button.setEnabled(True)
+			self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
 			if self.game_data[category_id]['level'][level]['type'] == 'text':
-				self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
 				self.answer_label.setText(self.wrap(self.game_data[category_id]['level'][level]['answer'],))
-				self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
+			elif self.game_data[category_id]['level'][level]['type'] == 'image':
+				self.answer_label.setText('image')
+			self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
 
 		else:
 			message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
@@ -198,7 +231,9 @@ class Jeopardy(QtGui.QWidget):
 
 	def player_pressed(self,player_id):
 		if self.listen:
-			self.music.kill()
+			if self.music:
+				self.music.kill()
+				self.music = None
 		if self.listen or self.double_jeopardy:
 			self.listen = False
 			self.set_response(True)
@@ -217,10 +252,10 @@ class Jeopardy(QtGui.QWidget):
 
 	def clear_answer_section(self):
 		self.reset_player_color()
-		if self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'] == 'text':
-			self.answer_label.setText('')
-			self.question_label.setText('')
-			self.wall.clear_answer_section(self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'])
+		#if self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'] == 'text':
+		self.answer_label.setText('')
+		self.question_label.setText('')
+		self.wall.clear_answer_section(self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'])
 
 
 	def correct(self):
@@ -260,7 +295,8 @@ class Jeopardy(QtGui.QWidget):
 		button.setText(title)
 		self.wall.wall_button[self.current_field[0]][self.current_field[1]].setText(title)
 		self.reset_player_color()
-		self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+		if self.music_checkbox.checkState() == 2:
+			self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
 	def reopen(self):
@@ -269,12 +305,14 @@ class Jeopardy(QtGui.QWidget):
 			self.set_field_activity(True)
 			self.reopen_button.setEnabled(False)
 			self.clear_answer_section()
-			self.music.kill()
+			if self.music:
+				self.music.kill()
 		else:
 			self.reset_player_color()
 			self.listen = True
 			self.set_response(False)
-			self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+			if self.music_checkbox.checkState() == 2:
+				self.music = subprocess.Popen(['mplayer','data/music.ogg'],stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
 			if self.double_jeopardy:
 				self.double_jeopardy = False
 
@@ -296,6 +334,7 @@ class Jeopardy(QtGui.QWidget):
 		self.app = app
 		self.double_jeopardy = False
 		self.active_player = None
+		self.music = None
 
 		game_str = ''
 		with open(game_file,'r') as file:
@@ -383,7 +422,9 @@ class Jeopardy(QtGui.QWidget):
 
 		quit = QtGui.QPushButton('quit')
 		self.random_player_button = QtGui.QPushButton('random player')
-		self.random_player_button.setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
+		self.music_checkbox = QtGui.QCheckBox('play Jeoprady music')
+		self.music_checkbox.setCheckState(0)
+		global_button_layout.addWidget(self.music_checkbox)
 		global_button_layout.addWidget(self.random_player_button)
 		global_button_layout.addWidget(quit)
 

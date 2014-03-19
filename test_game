@@ -1,6 +1,6 @@
 [
     {
-        "category": "Category 1", 
+        "category": "Das ist allen nur ein Test!", 
         "level": [
             {
                 "answer": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd", 
@@ -15,10 +15,10 @@
                 "type": "image"
             }, 
             {
-                "answer": "Answer 3", 
+                "answer": "50px_test.png", 
                 "double_jeopardy": false, 
-                "question": "Question 3", 
-                "type": "text"
+                "question": "Test for small images", 
+                "type": "image"
             }, 
             {
                 "answer": "Answer 4", 
