@@ -17,8 +17,8 @@ game[0]['level'] = []
 game[0]['level'].append(create_answer('text','Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd','Question 1',True))
 game[0]['level'].append(create_answer('image','serenity.jpg','what is the Serenity (Firefly class)'))
 game[0]['level'].append(create_answer('image','50px_test.png','Test for small images'))
-game[0]['level'].append(create_answer('text','Answer 4','Question 4'))
-game[0]['level'].append(create_answer('text','Answer 5','Question 5'))
+game[0]['level'].append(create_answer('video','let_it_go.mp4','Let It Go (Frozen)'))
+game[0]['level'].append(create_answer('audio','let_it_go.ogg','Question 5'))
 
 game[1]['category'] = 'Category 2'
 game[1]['level'] = []
