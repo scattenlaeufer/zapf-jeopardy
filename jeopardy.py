@@ -55,14 +55,13 @@ class Jeopardy_Wall(QtGui.QWidget):
 			self.video_player.setHidden(False)
 			self.video_player.play(phonon.Phonon.MediaSource(answer))
 #			self.video_player.play(answer)
-			print(self.video_player.isPlaying())
-			print(self.video_player.isPaused())
-			print(self.video_player.totalTime())
+#			print(self.video_player.isPlaying())
+#			print(self.video_player.isPaused())
+#			print(self.video_player.totalTime())
 		elif type == 'audio':
 			self.answer_label.setHidden(False)
 			self.answer_label.setText(answer)
 			audio = Jeopardy.Music(answer)
-			sleep(10)
 			audio.play()
 
 
@@ -125,6 +124,8 @@ class Jeopardy_Wall(QtGui.QWidget):
 
 class Jeopardy(QtGui.QWidget):
 
+
+	# Class for the individual players
 	class Player:
 
 		def rename(self):
@@ -249,7 +250,9 @@ class Jeopardy(QtGui.QWidget):
 			else:
 				self.listen = True
 				self.set_field_activity(False)
-				if self.music_checkbox.checkState() == 2:
+				self.av_type = self.game_data[category_id]['level'][level]['type'] in ['audio','video']
+				print(self.av_type)
+				if self.music_checkbox.checkState() == 2 and not self.av_type:
 					self.music.play()
 			self.reopen_button.setEnabled(True)
 			self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
@@ -268,6 +271,7 @@ class Jeopardy(QtGui.QWidget):
 		if self.listen:
 			self.music.stop()
 		if self.listen or self.double_jeopardy:
+			self.wall.video_player.pause()
 			self.listen = False
 			self.set_response(True)
 			self.active_player = player_id
@@ -328,8 +332,9 @@ class Jeopardy(QtGui.QWidget):
 		button.setText(title)
 		self.wall.wall_button[self.current_field[0]][self.current_field[1]].setText(title)
 		self.reset_player_color()
-		if self.music_checkbox.checkState() == 2:
+		if self.music_checkbox.checkState() == 2 and not self.av_type:
 			self.music.play()
+		self.wall.video_player.play()
 
 
 	def reopen(self):
@@ -339,11 +344,13 @@ class Jeopardy(QtGui.QWidget):
 			self.reopen_button.setEnabled(False)
 			self.clear_answer_section()
 			self.music.stop()
+			self.wall.video_player.pause()
 		else:
 			self.reset_player_color()
 			self.listen = True
 			self.set_response(False)
-			if self.music_checkbox.checkState() == 2:
+			self.wall.video_player.play()
+			if self.music_checkbox.checkState() == 2 and not self.av_type:
 				self.music.play()
 			if self.double_jeopardy:
 				self.double_jeopardy = False
