@@ -250,9 +250,9 @@ class Jeopardy(QtGui.QWidget):
 			else:
 				self.listen = True
 				self.set_field_activity(False)
-				self.av_type = self.game_data[category_id]['level'][level]['type'] in ['audio','video']
-				print(self.av_type)
-				if self.music_checkbox.checkState() == 2 and not self.av_type:
+				self.type_video = self.game_data[category_id]['level'][level]['type'] in ['video']
+				self.type_audio = self.game_data[category_id]['level'][level]['type'] in ['audio']
+				if self.music_checkbox.checkState() == 2 and not (self.type_video or self.type_audio):
 					self.music.play()
 			self.reopen_button.setEnabled(True)
 			self.wall.present_answer(self.game_data[category_id]['level'][level]['type'],self.game_data[category_id]['level'][level]['answer'])
@@ -332,9 +332,10 @@ class Jeopardy(QtGui.QWidget):
 		button.setText(title)
 		self.wall.wall_button[self.current_field[0]][self.current_field[1]].setText(title)
 		self.reset_player_color()
-		if self.music_checkbox.checkState() == 2 and not self.av_type:
+		if self.music_checkbox.checkState() == 2 and not (self.type_video or self.type_audio):
 			self.music.play()
-		self.wall.video_player.play()
+		if self.type_video:
+			self.wall.video_player.play()
 
 
 	def reopen(self):
@@ -344,16 +345,34 @@ class Jeopardy(QtGui.QWidget):
 			self.reopen_button.setEnabled(False)
 			self.clear_answer_section()
 			self.music.stop()
-			self.wall.video_player.pause()
+			if self.type_video:
+				self.wall.video_player.pause()
 		else:
 			self.reset_player_color()
 			self.listen = True
 			self.set_response(False)
-			self.wall.video_player.play()
-			if self.music_checkbox.checkState() == 2 and not self.av_type:
+			if self.type_video:
+				self.wall.video_player.play()
+			if self.music_checkbox.checkState() == 2 and not (self.type_video or self.audio):
 				self.music.play()
 			if self.double_jeopardy:
 				self.double_jeopardy = False
+
+
+	def answer_play(self):
+		if self.type_video:
+			self.wall.video_player.play()
+
+
+	def answer_pause(self):
+		if self.type_video:
+			self.wall.video_player.pause()
+
+
+	def answer_stop(self):
+		print('replay')
+		if self.type_video:
+			self.wall.video_player.stop()
 
 
 	def set_response(self,a):
@@ -409,9 +428,16 @@ class Jeopardy(QtGui.QWidget):
 
 		# Create the Answer section
 		self.answer_label = QtGui.QLabel('')
+		self.answer_label.setHidden(True)
 		self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
+		self.answer_play_button = QtGui.QPushButton('play')
+		self.answer_pause_button = QtGui.QPushButton('pause')
+		self.answer_stop_button = QtGui.QPushButton('stop')
 		answer_layout = QtGui.QHBoxLayout(None)
 		answer_layout.addWidget(self.answer_label)
+		answer_layout.addWidget(self.answer_play_button)
+		answer_layout.addWidget(self.answer_pause_button)
+		answer_layout.addWidget(self.answer_stop_button)
 		answer_box = QtGui.QGroupBox('presented answer')
 		answer_box.setLayout(answer_layout)
 
@@ -487,6 +513,10 @@ class Jeopardy(QtGui.QWidget):
 		self.app.connect(self.correct_button,Qt.SIGNAL('pressed()'),lambda: self.correct())
 		self.app.connect(self.wrong_button,Qt.SIGNAL('pressed()'),lambda: self.wrong())
 		self.app.connect(self.reopen_button,Qt.SIGNAL('pressed()'),lambda: self.reopen())
+
+		self.app.connect(self.answer_play_button,Qt.SIGNAL('pressed()'),lambda: self.answer_play())
+		self.app.connect(self.answer_pause_button,Qt.SIGNAL('pressed()'),lambda: self.answer_pause())
+		self.app.connect(self.answer_stop_button,Qt.SIGNAL('pressed()'),lambda: self.answer_stop())
 
 		self.randomize_player()
 
