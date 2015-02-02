@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, json, subprocess, random
+import sys, os, json, subprocess, random
 from textwrap import wrap
 from PyQt4 import QtGui, QtCore, Qt, phonon
 from time import sleep
@@ -48,11 +48,11 @@ class Jeopardy_Wall(QtGui.QWidget):
 			self.answer_label.setText('\n'.join(wrap(answer,50)))
 		elif type == 'image':
 			self.answer_label.setHidden(False)
-			image = self.scale(QtGui.QPixmap(answer))
+			image = self.scale(QtGui.QPixmap(os.path.join(self.file_head,answer)))
 			self.answer_label.setPixmap(image)
 		elif type == 'video':
 			self.video_player.setHidden(False)
-			self.video_player.play(phonon.Phonon.MediaSource(answer))
+			self.video_player.play(phonon.Phonon.MediaSource(os.path.join(self.file_head,answer)))
 #			self.video_player.play(answer)
 #			print(self.video_player.isPlaying())
 #			print(self.video_player.isPaused())
@@ -60,7 +60,7 @@ class Jeopardy_Wall(QtGui.QWidget):
 		elif type == 'audio':
 			self.answer_label.setHidden(False)
 			self.answer_label.setText('listen up!')
-			self.audio = Jeopardy.Music(answer)
+			self.audio = Jeopardy.Music(os.path.join(self.file_head,answer))
 			self.audio.play()
 
 
@@ -72,10 +72,12 @@ class Jeopardy_Wall(QtGui.QWidget):
 		self.answer_box.setHidden(True)
 		self.jeopardy_wall_box.setHidden(False)
 
-	def __init__(self):
+	def __init__(self,file_head):
 		super(Jeopardy_Wall,self).__init__()
 		self.grid = QtGui.QGridLayout(self)
 		
+		self.file_head = file_head
+
 		jeopardy_wall_layout = QtGui.QHBoxLayout(None)
 
 		self.wall_button = []
@@ -421,6 +423,7 @@ class Jeopardy(QtGui.QWidget):
 		with open(game_file,'r') as file:
 			game_str = file.read()
 		self.game_data = json.loads(game_str)
+		game_dir_head = os.path.split(game_file)[0]
 
 		jeopardy_categories = []
 		for i in self.game_data:
@@ -553,7 +556,7 @@ class Jeopardy(QtGui.QWidget):
 		self.setLayout(self.grid)
 		self.setWindowTitle(name)
 
-		self.wall = Jeopardy_Wall()
+		self.wall = Jeopardy_Wall(game_dir_head)
 		self.wall.set_categories(jeopardy_categories)
 
 		self.wall.player_wall_layout.addWidget(self.player['p1'].wall_box)
