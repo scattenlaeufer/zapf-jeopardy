@@ -228,11 +228,13 @@ class Jeopardy(QtGui.QWidget):
             super(Jeopardy.SerialCommunicator, self).__init__()
             self.app = app
 
-            self.ser = serial.Serial(serialport, baudrate)
+            self.read_interval = 200
+
+            self.ser = serial.Serial(serialport, baudrate, timeout=self.read_interval/1000)
 
             self.timer = QtCore.QTimer()
             self.timer.moveToThread(self)
-            self.timer.setInterval(200)
+            self.timer.setInterval(self.read_interval)
             self.app.connect(self.timer, Qt.SIGNAL('timeout()'), self.stuff)
 
         def run(self):
@@ -410,7 +412,6 @@ class Jeopardy(QtGui.QWidget):
 
     def serial_input(self, output):
         self.serialCom.exit()
-        print(output)
         self.player_pressed('p'+str(output+1))
 
 
