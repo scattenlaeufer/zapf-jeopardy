@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os, json, subprocess, random
+import sys, os, json, subprocess, random, serial
 from textwrap import wrap
 from PyQt4 import QtGui, QtCore, Qt, phonon
 from time import sleep
@@ -168,14 +168,14 @@ class Jeopardy(QtGui.QWidget):
             self.points_text.setText(str(self.points))
             rename_button = QtGui.QPushButton('rename')
             bonus_button = QtGui.QPushButton('bonus')
-            
+
             layout.addWidget(name_label,0,0)
             layout.addWidget(self.name_text,0,1,1,2)
             layout.addWidget(points_label,1,0)
             layout.addWidget(self.points_text,1,1,1,2)
             layout.addWidget(rename_button,2,0)
             layout.addWidget(bonus_button,2,1)
-    
+
             self.box = QtGui.QGroupBox(name)
             self.box.setLayout(layout)
             self.box.setAutoFillBackground(True)
@@ -222,6 +222,30 @@ class Jeopardy(QtGui.QWidget):
 
     class SerialCommunicator(QtCore.QThread):
 
+        buttonpress = QtCore.pyqtSignal(int)
+
+        def __init__(self, app, serialport='/dev/ttyUSB0', baudrate=9600):
+            super(Jeopardy.SerialCommunicator, self).__init__()
+            self.app = app
+
+            self.ser = serial.Serial(serialport, baudrate)
+
+            self.timer = QtCore.QTimer()
+            self.timer.moveToThread(self)
+            self.timer.setInterval(200)
+            self.app.connect(self.timer, Qt.SIGNAL('timeout()'), self.stuff)
+
+        def run(self):
+            self.ser.reset_input_buffer()
+            self.timer.start()
+            self.exec_()
+
+        def stuff(self):
+            ser_output = None
+            ser_output = self.ser.read()
+            if ser_output:
+                self.buttonpress.emit(int(ser_output.decode()))
+
 
     def __init__(self,app,game_file):
         super(Jeopardy,self).__init__()
@@ -230,6 +254,7 @@ class Jeopardy(QtGui.QWidget):
         self.double_jeopardy = False
         self.active_player = None
         self.music = self.Music()
+        self.serialCom = self.SerialCommunicator(app)
 
         game_str = ''
         with open(game_file,'r') as file:
@@ -365,6 +390,8 @@ class Jeopardy(QtGui.QWidget):
         self.app.connect(player_3_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p3'))
         self.app.connect(player_4_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p4'))
 
+        self.serialCom.buttonpress.connect(self.serial_input)
+
         self.setLayout(self.grid)
         self.setWindowTitle(name)
 
@@ -379,6 +406,12 @@ class Jeopardy(QtGui.QWidget):
         self.show()
 #        self.showMaximized()
         self.wall.show()
+
+
+    def serial_input(self, output):
+        self.serialCom.exit()
+        print(output)
+        self.player_pressed('p'+str(output+1))
 
 
     def quit(self):
@@ -428,6 +461,8 @@ class Jeopardy(QtGui.QWidget):
             elif self.game_data[category_id]['level'][level]['type'] == 'image':
                 self.answer_label.setText('image')
             self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
+
+            self.serialCom.start()
 
         else:
             message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
@@ -495,6 +530,7 @@ class Jeopardy(QtGui.QWidget):
         self.set_response(False)
         self.set_field_activity(False)
         self.listen = True
+        self.serialCom.start()
         player = self.player[self.active_player]
         button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
         if self.double_jeopardy:
@@ -529,6 +565,7 @@ class Jeopardy(QtGui.QWidget):
         else:
             self.reset_player_color()
             self.listen = True
+            self.serialCom.start()
             self.set_response(False)
             if self.type_video:
                 self.wall.video_player.play()
