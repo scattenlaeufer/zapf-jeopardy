@@ -168,6 +168,7 @@ class Jeopardy(QtGui.QWidget):
             self.points_text.setText(str(self.points))
             rename_button = QtGui.QPushButton('rename')
             bonus_button = QtGui.QPushButton('bonus')
+            detect_button = QtGui.QPushButton('detect')
 
             layout.addWidget(name_label,0,0)
             layout.addWidget(self.name_text,0,1,1,2)
@@ -175,6 +176,7 @@ class Jeopardy(QtGui.QWidget):
             layout.addWidget(self.points_text,1,1,1,2)
             layout.addWidget(rename_button,2,0)
             layout.addWidget(bonus_button,2,1)
+            layout.addWidget(detect_button, 2, 2)
 
             self.box = QtGui.QGroupBox(name)
             self.box.setLayout(layout)
@@ -447,6 +449,7 @@ class Jeopardy(QtGui.QWidget):
                 self.player_pressed(self.active_player)
             else:
                 self.listen = True
+                self.serialCom.start()
                 self.set_field_activity(False)
                 if self.music_checkbox.checkState() == 2 and not (self.type_video or self.type_audio):
                     self.music.play()
@@ -463,7 +466,6 @@ class Jeopardy(QtGui.QWidget):
                 self.answer_label.setText('image')
             self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
 
-            self.serialCom.start()
 
         else:
             message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
@@ -471,6 +473,8 @@ class Jeopardy(QtGui.QWidget):
 
 
     def player_pressed(self,player_id):
+        if self.serialCom.isRunning():
+            self.serialCom.exit()
         if self.listen:
             self.music.stop()
         if self.listen or self.double_jeopardy:
