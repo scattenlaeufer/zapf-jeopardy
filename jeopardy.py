@@ -129,28 +129,6 @@ class Jeopardy(QtGui.QWidget):
     # Class for the individual players
     class Player:
 
-        def rename(self):
-            text, ok = QtGui.QInputDialog.getText(None,'rename '+self.name, 'enter new name:')
-            if ok and text != '':
-                self.name = text
-                self.name_text.setText(self.name)
-                self.wall_box.setTitle(self.name)
-
-
-        def bonus(self):
-            bonus_points, ok = QtGui.QInputDialog.getText(None,'bouns points','give '+self.name+' bonus points:')
-            if ok and bonus_points != '':
-                try:
-                    self.add_points(int(bonus_points))
-                except ValueError:
-                    message = QtGui.QMessageBox(3,'ValueError','points must be integer!\nnoting will happen')
-                    message.exec_()
-
-        def add_points(self,points):
-            self.points += points
-            self.points_text.setText(str(self.points))
-            self.wall_points_text.setText(str(self.points))
-
         def __init__(self,app,name,color,points=0):
             self.app = app
             self.name = name
@@ -198,6 +176,27 @@ class Jeopardy(QtGui.QWidget):
 
             self.app.connect(rename_button,Qt.SIGNAL('pressed()'),lambda: self.rename())
             self.app.connect(bonus_button,Qt.SIGNAL('pressed()'),lambda: self.bonus())
+
+        def rename(self):
+            text, ok = QtGui.QInputDialog.getText(None,'rename '+self.name, 'enter new name:')
+            if ok and text != '':
+                self.name = text
+                self.name_text.setText(self.name)
+                self.wall_box.setTitle(self.name)
+
+        def bonus(self):
+            bonus_points, ok = QtGui.QInputDialog.getText(None,'bouns points','give '+self.name+' bonus points:')
+            if ok and bonus_points != '':
+                try:
+                    self.add_points(int(bonus_points))
+                except ValueError:
+                    message = QtGui.QMessageBox(3,'ValueError','points must be integer!\nnoting will happen')
+                    message.exec_()
+
+        def add_points(self,points):
+            self.points += points
+            self.points_text.setText(str(self.points))
+            self.wall_points_text.setText(str(self.points))
 
 
     class Music(QtCore.QObject):
