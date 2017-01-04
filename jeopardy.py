@@ -146,7 +146,7 @@ class Jeopardy(QtGui.QWidget):
             self.points_text.setText(str(self.points))
             rename_button = QtGui.QPushButton('rename')
             bonus_button = QtGui.QPushButton('bonus')
-            detect_button = QtGui.QPushButton('detect')
+            self.detect_button = QtGui.QPushButton('detect')
 
             layout.addWidget(name_label,0,0)
             layout.addWidget(self.name_text,0,1,1,2)
@@ -154,7 +154,7 @@ class Jeopardy(QtGui.QWidget):
             layout.addWidget(self.points_text,1,1,1,2)
             layout.addWidget(rename_button,2,0)
             layout.addWidget(bonus_button,2,1)
-            layout.addWidget(detect_button, 2, 2)
+            layout.addWidget(self.detect_button, 2, 2)
 
             self.box = QtGui.QGroupBox(name)
             self.box.setLayout(layout)
@@ -258,6 +258,9 @@ class Jeopardy(QtGui.QWidget):
         self.active_player = None
         self.music = self.Music()
         self.serialCom = self.SerialCommunicator(app)
+
+        self.button_list = ['p1', 'p2', 'p3', 'p4']
+        self.detect_functions = {}
 
         game_str = ''
         with open(game_file,'r') as file:
@@ -393,6 +396,11 @@ class Jeopardy(QtGui.QWidget):
         self.app.connect(player_3_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p3'))
         self.app.connect(player_4_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p4'))
 
+        self.app.connect(self.player['p1'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p1'))
+        self.app.connect(self.player['p2'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p2'))
+        self.app.connect(self.player['p3'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p3'))
+        self.app.connect(self.player['p4'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p4'))
+
         self.serialCom.buttonpress.connect(self.serial_input)
 
         self.setLayout(self.grid)
@@ -410,10 +418,21 @@ class Jeopardy(QtGui.QWidget):
 #        self.showMaximized()
         self.wall.show()
 
+    def detect_button(self, player):
+        self.detect_functions[player] = lambda x: self.return_serial_input(player, x)
+        self.serialCom.buttonpress.connect(self.detect_functions[player])
+        self.serialCom.start()
+
+    def return_serial_input(self, player, output):
+        self.serialCom.exit()
+        self.serialCom.buttonpress.disconnect(self.detect_functions[player])
+        self.button_list[output] = player
+        self.player[player].detect_button.setText(str(output))
 
     def serial_input(self, output):
         self.serialCom.exit()
-        self.player_pressed('p'+str(output+1))
+        if self.listen:
+            self.player_pressed(self.button_list[output])
 
 
     def quit(self):
