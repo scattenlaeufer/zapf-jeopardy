@@ -11,6 +11,7 @@ from time import sleep
 
 name = 'ZaPF-Jeopardy (v0.1)'
 points_factor = 1
+use_button_box = True
 
 class Jeopardy_Wall(QtGui.QWidget):
 
@@ -52,11 +53,15 @@ class Jeopardy_Wall(QtGui.QWidget):
             self.answer_label.setPixmap(image)
         elif type == 'video':
             self.video_player.setHidden(False)
-            self.video_player.play(phonon.Phonon.MediaSource(os.path.join(self.file_head,answer)))
-#            self.video_player.play(answer)
-#            print(self.video_player.isPlaying())
-#            print(self.video_player.isPaused())
-#            print(self.video_player.totalTime())
+            media_source = phonon.Phonon.MediaSource(os.path.join(self.file_head,answer))
+            self.video_player.play(media_source)
+            # self.video_player.play()
+            # print(media_source)
+            # print(self.video_player.mediaObject())
+            # print(os.path.join(self.file_head,answer))
+            # print(self.video_player.isPlaying())
+            # print(self.video_player.isPaused())
+            # print(self.video_player.totalTime())
         elif type == 'audio':
             self.answer_label.setHidden(False)
             self.answer_label.setText('listen up!')
@@ -75,7 +80,7 @@ class Jeopardy_Wall(QtGui.QWidget):
     def __init__(self,file_head):
         super(Jeopardy_Wall,self).__init__()
         self.grid = QtGui.QGridLayout(self)
-        
+
         self.file_head = file_head
 
         jeopardy_wall_layout = QtGui.QHBoxLayout(None)
@@ -94,7 +99,7 @@ class Jeopardy_Wall(QtGui.QWidget):
                 self.wall_button[i].append(QtGui.QPushButton(str((j+1)*points_factor)))
                 self.wall_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
                 self.wall_category_layouts[i].addWidget(self.wall_button[i][j])
-            
+
         self.player_wall_layout = QtGui.QHBoxLayout(None)
 
         self.jeopardy_wall_box = QtGui.QGroupBox('Jeopardy board')
@@ -257,7 +262,8 @@ class Jeopardy(QtGui.QWidget):
         self.double_jeopardy = False
         self.active_player = None
         self.music = self.Music()
-        self.serialCom = self.SerialCommunicator(app)
+        if use_button_box:
+            self.serialCom = self.SerialCommunicator(app)
 
         self.button_list = ['p1', 'p2', 'p3', 'p4']
         self.detect_functions = {}
@@ -401,7 +407,8 @@ class Jeopardy(QtGui.QWidget):
         self.app.connect(self.player['p3'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p3'))
         self.app.connect(self.player['p4'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p4'))
 
-        self.serialCom.buttonpress.connect(self.serial_input)
+        if use_button_box:
+            self.serialCom.buttonpress.connect(self.serial_input)
 
         self.setLayout(self.grid)
         self.setWindowTitle(name)
@@ -419,20 +426,23 @@ class Jeopardy(QtGui.QWidget):
         self.wall.show()
 
     def detect_button(self, player):
-        self.detect_functions[player] = lambda x: self.return_serial_input(player, x)
-        self.serialCom.buttonpress.connect(self.detect_functions[player])
-        self.serialCom.start()
+        if use_button_box:
+            self.detect_functions[player] = lambda x: self.return_serial_input(player, x)
+            self.serialCom.buttonpress.connect(self.detect_functions[player])
+            self.serialCom.start()
 
     def return_serial_input(self, player, output):
-        self.serialCom.exit()
-        self.serialCom.buttonpress.disconnect(self.detect_functions[player])
-        self.button_list[output] = player
-        self.player[player].detect_button.setText(str(output))
+        if use_button_box:
+            self.serialCom.exit()
+            self.serialCom.buttonpress.disconnect(self.detect_functions[player])
+            self.button_list[output] = player
+            self.player[player].detect_button.setText(str(output))
 
     def serial_input(self, output):
-        self.serialCom.exit()
-        if self.listen:
-            self.player_pressed(self.button_list[output])
+        if use_button_box:
+            self.serialCom.exit()
+            if self.listen:
+                self.player_pressed(self.button_list[output])
 
 
     def quit(self):
@@ -467,7 +477,8 @@ class Jeopardy(QtGui.QWidget):
                 self.player_pressed(self.active_player)
             else:
                 self.listen = True
-                self.serialCom.start()
+                if use_button_box:
+                    self.serialCom.start()
                 self.set_field_activity(False)
                 if self.music_checkbox.checkState() == 2 and not (self.type_video or self.type_audio):
                     self.music.play()
@@ -491,8 +502,9 @@ class Jeopardy(QtGui.QWidget):
 
 
     def player_pressed(self,player_id):
-        if self.serialCom.isRunning():
-            self.serialCom.exit()
+        if use_button_box:
+            if self.serialCom.isRunning():
+                self.serialCom.exit()
         if self.listen:
             self.music.stop()
         if self.listen or self.double_jeopardy:
@@ -553,7 +565,8 @@ class Jeopardy(QtGui.QWidget):
         self.set_response(False)
         self.set_field_activity(False)
         self.listen = True
-        self.serialCom.start()
+        if use_button_box:
+            self.serialCom.start()
         player = self.player[self.active_player]
         button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
         if self.double_jeopardy:
@@ -588,7 +601,8 @@ class Jeopardy(QtGui.QWidget):
         else:
             self.reset_player_color()
             self.listen = True
-            self.serialCom.start()
+            if use_button_box:
+                self.serialCom.start()
             self.set_response(False)
             if self.type_video:
                 self.wall.video_player.play()
