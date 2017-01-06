@@ -10,7 +10,7 @@ from time import sleep
 #    Mediacontrolsteuerung setting
 
 name = 'ZaPF-Jeopardy (v0.1)'
-points_factor = 1
+points_factor = 100
 use_button_box = True
 
 class Jeopardy_Wall(QtGui.QWidget):
@@ -117,10 +117,8 @@ class Jeopardy_Wall(QtGui.QWidget):
             self.audio.play()
 
     def clear_answer_section(self,type):
-        if type == 'text' or type == 'image':
-            self.answer_label.setHidden(True)
-        elif type == 'video':
-            self.video_player.setHidden(True)
+        self.answer_label.setHidden(True)
+        self.video_player.setHidden(True)
         self.answer_box.setHidden(True)
         self.jeopardy_wall_box.setHidden(False)
 
@@ -444,6 +442,8 @@ class Jeopardy(QtGui.QWidget):
         resp = message.exec_()
         if resp == 16384:
             self.app.quit()
+        elif use_button_box:
+            self.serialCom.start()
 
     def randomize_player(self):
         self.active_player = 'p' + str(random.randint(1,4))
@@ -457,8 +457,15 @@ class Jeopardy(QtGui.QWidget):
             if self.game_data[category_id]['level'][level]['double_jeopardy']:
                 self.double_jeopardy = True
                 ok = False
+                self.wall.jeopardy_wall_box.setHidden(True)
+                self.wall.answer_box.setHidden(False)
+                self.wall.answer_label.setHidden(False)
+                image = self.wall.scale(QtGui.QPixmap(os.path.abspath(os.path.join('data','double_jeopardy.png'))))
+                print(image)
+                self.wall.answer_label.setPixmap(image)
                 while not ok:
                     self.points_set,ok = QtGui.QInputDialog().getInt(None,'DOUBLE JEOPARDY','double jeopardy\nbet '+str((level+1)*points_factor)+' to '+str((level+1)*2*points_factor)+' points',(level+1)*points_factor,(1+level)*points_factor,(1+level)*points_factor*2)
+                self.wall.answer_label.setHidden(True)
 
             self.current_field = [category_id,level]
             self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
@@ -485,8 +492,6 @@ class Jeopardy(QtGui.QWidget):
             elif self.game_data[category_id]['level'][level]['type'] == 'image':
                 self.answer_label.setText('image')
             self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
-
-
         else:
             message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
             message.exec_()
@@ -534,9 +539,14 @@ class Jeopardy(QtGui.QWidget):
         button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
         wall_button = self.wall.wall_button[self.current_field[0]][self.current_field[1]]
         player = self.player[self.active_player]
+        if self.listen or self.double_jeopardy:
+            if self.type_video:
+                self.wall.video_player.pause()
+            elif self.type_audio:
+                self.wall.audio.pause()
         if self.double_jeopardy:
             title = str(button.text())+'\n'+player.name+' [✓] [DJ]'
-            player.add_points((self.points_set)*points_factor)
+            player.add_points(self.points_set)
             self.double_jeopardy = False
         else:
             title = str(button.text())+'\n'+player.name+' [✓]'
@@ -557,7 +567,7 @@ class Jeopardy(QtGui.QWidget):
         button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
         if self.double_jeopardy:
             title = str(button.text())+'\n'+player.name+' [✗] [DJ]'
-            player.add_points((self.points_set)*points_factor*-1)
+            player.add_points(self.points_set*-1)
             self.double_jeopardy = False
         else:
             title = str(button.text())+'\n'+player.name+' [✗]'
