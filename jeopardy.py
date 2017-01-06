@@ -438,6 +438,8 @@ class Jeopardy(QtGui.QWidget):
                 self.player_pressed(self.button_list[output])
 
     def quit(self):
+        if use_button_box:
+            self.serialCom.exit()
         message = QtGui.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         resp = message.exec_()
         if resp == 16384:
@@ -581,6 +583,8 @@ class Jeopardy(QtGui.QWidget):
                 self.wall.video_player.pause()
             elif self.type_audio:
                 self.wall.audio.pause()
+            if use_button_box:
+                self.serialCom.exit()
         else:
             self.reset_player_color()
             self.listen = True
