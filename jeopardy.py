@@ -15,68 +15,6 @@ use_button_box = True
 
 class Jeopardy_Wall(QtGui.QWidget):
 
-    def resizeEvent(self,r):
-            self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
-
-
-    def set_categories(self,categories):
-        for i in range(len(categories)):
-            self.wall_category_boxes[i].setTitle(categories[i])
-
-    def scale(self,media):
-        media_size = media.size()
-        label_size = self.answer_label.size()
-        media_ratio = float(media_size.width()) / float(media_size.height())
-        label_ratio = float(label_size.width()) / float(label_size.height())
-        scale_factor = 0.5
-        if media_size.width() > label_size.width() or media_size.height() > label_size.height():
-            if media_ratio < label_ratio:
-                return media.scaledToHeight(label_size.height())
-            else:
-                return media.scaledToWidth(label_size.width())
-        elif media_ratio > label_ratio and float(media_size.width()) / float(label_size.width()) < scale_factor:
-            return media.scaledToWidth(int(label_size.width() * scale_factor))
-        elif float(media_size.height()) / float(label_size.height()) < scale_factor:
-            return media.scaledToHeight(int(label_size.height() * scale_factor))
-        return media
-
-
-    def present_answer(self,type,answer):
-        self.jeopardy_wall_box.setHidden(True)
-        self.answer_box.setHidden(False)
-        if type == 'text':
-            self.answer_label.setHidden(False)
-            self.answer_label.setText('\n'.join(wrap(answer,50)))
-        elif type == 'image':
-            self.answer_label.setHidden(False)
-            image = self.scale(QtGui.QPixmap(os.path.join(self.file_head,answer)))
-            self.answer_label.setPixmap(image)
-        elif type == 'video':
-            self.video_player.setHidden(False)
-            media_source = phonon.Phonon.MediaSource(os.path.join(self.file_head,answer))
-            self.video_player.play(media_source)
-            # self.video_player.play()
-            # print(media_source)
-            # print(self.video_player.mediaObject())
-            # print(os.path.join(self.file_head,answer))
-            # print(self.video_player.isPlaying())
-            # print(self.video_player.isPaused())
-            # print(self.video_player.totalTime())
-        elif type == 'audio':
-            self.answer_label.setHidden(False)
-            self.answer_label.setText('listen up!')
-            self.audio = Jeopardy.Music(os.path.join(self.file_head,answer))
-            self.audio.play()
-
-
-    def clear_answer_section(self,type):
-        if type == 'text' or type == 'image':
-            self.answer_label.setHidden(True)
-        elif type == 'video':
-            self.video_player.setHidden(True)
-        self.answer_box.setHidden(True)
-        self.jeopardy_wall_box.setHidden(False)
-
     def __init__(self,file_head):
         super(Jeopardy_Wall,self).__init__()
         self.grid = QtGui.QGridLayout(self)
@@ -127,9 +65,67 @@ class Jeopardy_Wall(QtGui.QWidget):
         self.grid.addWidget(self.jeopardy_wall_box,0,0,8,0)
         self.grid.addWidget(player_wall_box,9,0)
 
+    def resizeEvent(self,r):
+            self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
+
+    def set_categories(self,categories):
+        for i in range(len(categories)):
+            self.wall_category_boxes[i].setTitle(categories[i])
+
+    def scale(self,media):
+        media_size = media.size()
+        label_size = self.answer_label.size()
+        media_ratio = float(media_size.width()) / float(media_size.height())
+        label_ratio = float(label_size.width()) / float(label_size.height())
+        scale_factor = 0.5
+        if media_size.width() > label_size.width() or media_size.height() > label_size.height():
+            if media_ratio < label_ratio:
+                return media.scaledToHeight(label_size.height())
+            else:
+                return media.scaledToWidth(label_size.width())
+        elif media_ratio > label_ratio and float(media_size.width()) / float(label_size.width()) < scale_factor:
+            return media.scaledToWidth(int(label_size.width() * scale_factor))
+        elif float(media_size.height()) / float(label_size.height()) < scale_factor:
+            return media.scaledToHeight(int(label_size.height() * scale_factor))
+        return media
+
+    def present_answer(self,type,answer):
+        self.jeopardy_wall_box.setHidden(True)
+        self.answer_box.setHidden(False)
+        if type == 'text':
+            self.answer_label.setHidden(False)
+            self.answer_label.setText('\n'.join(wrap(answer,50)))
+        elif type == 'image':
+            self.answer_label.setHidden(False)
+            image = self.scale(QtGui.QPixmap(os.path.join(self.file_head,answer)))
+            self.answer_label.setPixmap(image)
+        elif type == 'video':
+            self.video_player.setHidden(False)
+            media_source = phonon.Phonon.MediaSource(os.path.join(self.file_head,answer))
+            self.video_player.play(media_source)
+            # self.video_player.play()
+            # print(media_source)
+            # print(self.video_player.mediaObject())
+            # print(os.path.join(self.file_head,answer))
+            # print(self.video_player.isPlaying())
+            # print(self.video_player.isPaused())
+            # print(self.video_player.totalTime())
+        elif type == 'audio':
+            self.answer_label.setHidden(False)
+            self.answer_label.setText('listen up!')
+            self.audio = Jeopardy.Music(os.path.join(self.file_head,answer))
+            self.audio.play()
+
+    def clear_answer_section(self,type):
+        if type == 'text' or type == 'image':
+            self.answer_label.setHidden(True)
+        elif type == 'video':
+            self.video_player.setHidden(True)
+        self.answer_box.setHidden(True)
+        self.jeopardy_wall_box.setHidden(False)
+
 
 class Jeopardy(QtGui.QWidget):
-
 
     # Class for the individual players
     class Player:
@@ -203,7 +199,6 @@ class Jeopardy(QtGui.QWidget):
             self.points_text.setText(str(self.points))
             self.wall_points_text.setText(str(self.points))
 
-
     class Music(QtCore.QObject):
 
         def __init__(self,source="data/music.ogg"):
@@ -224,7 +219,6 @@ class Jeopardy(QtGui.QWidget):
         def stop(self):
             if self.media.state() == phonon.Phonon.PlayingState or self.media.state() == phonon.Phonon.PausedState:
                 self.media.stop()
-
 
     class SerialCommunicator(QtCore.QThread):
 
@@ -253,7 +247,6 @@ class Jeopardy(QtGui.QWidget):
             ser_output = self.ser.read()
             if ser_output:
                 self.buttonpress.emit(int(ser_output.decode()))
-
 
     def __init__(self,app,game_file):
         super(Jeopardy,self).__init__()
@@ -444,22 +437,18 @@ class Jeopardy(QtGui.QWidget):
             if self.listen:
                 self.player_pressed(self.button_list[output])
 
-
     def quit(self):
         message = QtGui.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         resp = message.exec_()
         if resp == 16384:
             self.app.quit()
 
-
     def randomize_player(self):
         self.active_player = 'p' + str(random.randint(1,4))
         self.random_player_button.setPalette(self.player[self.active_player].color)
 
-
     def wrap(self,text):
         return '\n'.join(wrap(text,110))
-
 
     def select_field(self,category_id,level):
         if self.active_player != None:
@@ -500,7 +489,6 @@ class Jeopardy(QtGui.QWidget):
             message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
             message.exec_()
 
-
     def player_pressed(self,player_id):
         if use_button_box:
             if self.serialCom.isRunning():
@@ -520,12 +508,10 @@ class Jeopardy(QtGui.QWidget):
                     self.player[i].wall_box.setPalette(self.palette())
                     self.player[i].box.setPalette(self.palette())
 
-
     def reset_player_color(self):
         for i in self.player:
             self.player[i].wall_box.setPalette(self.player[i].color)
             self.player[i].box.setPalette(self.player[i].color)
-
 
     def clear_answer_section(self):
         self.reset_player_color()
@@ -538,7 +524,6 @@ class Jeopardy(QtGui.QWidget):
         self.answer_label.setText('')
         self.question_label.setText('')
         self.wall.clear_answer_section(self.game_data[self.current_field[0]]['level'][self.current_field[1]]['type'])
-
 
     def correct(self):
         self.set_response(False)
@@ -559,7 +544,6 @@ class Jeopardy(QtGui.QWidget):
         wall_button.setPalette(player.color)
         wall_button.setText(title)
         self.clear_answer_section()
-
 
     def wrong(self,points_set=0):
         self.set_response(False)
@@ -585,7 +569,6 @@ class Jeopardy(QtGui.QWidget):
             self.wall.video_player.play()
         elif self.type_audio:
             self.wall.audio.play()
-
 
     def reopen(self):
         if self.listen:
@@ -613,13 +596,11 @@ class Jeopardy(QtGui.QWidget):
             if self.double_jeopardy:
                 self.double_jeopardy = False
 
-
     def answer_play(self):
         if self.type_video:
             self.wall.video_player.play()
         elif self.type_audio:
             self.wall.audio.play()
-
 
     def answer_pause(self):
         if self.type_video:
@@ -627,24 +608,20 @@ class Jeopardy(QtGui.QWidget):
         elif self.type_audio:
             self.wall.audio.pause()
 
-
     def answer_stop(self):
         if self.type_video:
             self.wall.video_player.stop()
         elif self.type_audio:
             self.wall.audio.stop()
 
-
     def set_response(self,a):
         self.correct_button.setEnabled(a)
         self.wrong_button.setEnabled(a)
-
 
     def set_field_activity(self,a):
         for i in self.jeopardy_button:
             for j in i:
                 j.setEnabled(a)
-
 
 def main():
     app = QtGui.QApplication(sys.argv)
