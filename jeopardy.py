@@ -11,7 +11,13 @@ from time import sleep
 
 name = 'ZaPF-Jeopardy (v0.1)'
 points_factor = 100
-use_button_box = True
+
+serial_path = '/dev/ttyUSB0'
+
+if os.path.exists(serial_path):
+    use_button_box = True
+else:
+    use_button_box = False
 
 class Jeopardy_Wall(QtGui.QWidget):
 
@@ -146,6 +152,8 @@ class Jeopardy(QtGui.QWidget):
             rename_button = QtGui.QPushButton('rename')
             bonus_button = QtGui.QPushButton('bonus')
             self.detect_button = QtGui.QPushButton('detect')
+            if not use_button_box:
+                self.detect_button.setEnabled(False)
 
             layout.addWidget(name_label,0,0)
             layout.addWidget(self.name_text,0,1,1,2)
@@ -222,7 +230,7 @@ class Jeopardy(QtGui.QWidget):
 
         buttonpress = QtCore.pyqtSignal(int)
 
-        def __init__(self, app, serialport='/dev/ttyUSB0', baudrate=9600):
+        def __init__(self, app, serialport=serial_path, baudrate=9600):
             super(Jeopardy.SerialCommunicator, self).__init__()
             self.app = app
 
@@ -636,6 +644,7 @@ class Jeopardy(QtGui.QWidget):
         for i in self.jeopardy_button:
             for j in i:
                 j.setEnabled(a)
+
 
 def main():
     app = QtGui.QApplication(sys.argv)
