@@ -14,6 +14,15 @@ points_factor = 100
 
 serial_path = '/dev/ttyUSB0'
 
+font_size_wall = 25
+font_size_answer = 40
+font_size_player = 25
+
+color_1 = [255, 165, 100]
+color_2 = [255, 255, 0]
+color_3 = [0, 255, 0]
+color_4 = [0, 255, 255]
+
 if os.path.exists(serial_path):
     use_button_box = True
 else:
@@ -47,6 +56,9 @@ class Jeopardy_Wall(QtGui.QWidget):
         self.player_wall_layout = QtGui.QHBoxLayout(None)
 
         self.jeopardy_wall_box = QtGui.QGroupBox('Jeopardy board')
+        wall_font = self.jeopardy_wall_box.font()
+        wall_font.setPointSize(font_size_wall)
+        self.jeopardy_wall_box.setFont(wall_font)
         self.jeopardy_wall_box.setLayout(jeopardy_wall_layout)
 
 
@@ -57,7 +69,7 @@ class Jeopardy_Wall(QtGui.QWidget):
         self.answer_label = QtGui.QLabel('')
         self.answer_label.setHidden(True)
         answer_font = self.font()
-        answer_font.setPointSize(20)
+        answer_font.setPointSize(font_size_answer)
         self.answer_label.setFont(answer_font)
         self.video_player = phonon.Phonon.VideoPlayer(phonon.Phonon.VideoCategory,None)
         self.video_player.setHidden(True)
@@ -177,6 +189,9 @@ class Jeopardy(QtGui.QWidget):
             wall_layout.addWidget(self.wall_points_text)
 
             self.wall_box = QtGui.QGroupBox(name)
+            wall_box_font = self.wall_box.font()
+            wall_box_font.setPointSize(font_size_player)
+            self.wall_box.setFont(wall_box_font)
             self.wall_box.setLayout(wall_layout)
             self.wall_box.setAutoFillBackground(True)
             self.wall_box.setPalette(self.color)
@@ -348,10 +363,10 @@ class Jeopardy(QtGui.QWidget):
         player_box.setLayout(player_section_layout)
 
         self.player = {}
-        self.player['p1'] = self.Player(self.app,'Player 1',[0,0,255])
-        self.player['p2'] = self.Player(self.app,'Player 2',[255,0,0])
-        self.player['p3'] = self.Player(self.app,'Player 3',[0,255,0])
-        self.player['p4'] = self.Player(self.app,'Player 4',[255,255,0])
+        self.player['p1'] = self.Player(self.app,'Player 1', color_1)
+        self.player['p2'] = self.Player(self.app,'Player 2', color_2)
+        self.player['p3'] = self.Player(self.app,'Player 3', color_3)
+        self.player['p4'] = self.Player(self.app,'Player 4', color_4)
 
         player_section_layout.addWidget(self.player['p1'].box)
         player_section_layout.addWidget(self.player['p2'].box)
@@ -469,7 +484,7 @@ class Jeopardy(QtGui.QWidget):
                 self.wall.answer_box.setHidden(False)
                 self.wall.answer_label.setHidden(False)
                 image = self.wall.scale(QtGui.QPixmap(os.path.abspath(os.path.join('data','double_jeopardy.png'))))
-                print(image)
+                # print(image)
                 self.wall.answer_label.setPixmap(image)
                 while not ok:
                     self.points_set,ok = QtGui.QInputDialog().getInt(None,'DOUBLE JEOPARDY','double jeopardy\nbet '+str((level+1)*points_factor)+' to '+str((level+1)*2*points_factor)+' points',(level+1)*points_factor,(1+level)*points_factor,(1+level)*points_factor*2)
