@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys, os, json, subprocess, random, serial
+import argparse
 from textwrap import wrap
 from PyQt4 import QtGui, QtCore, Qt, phonon
 from time import sleep
@@ -271,7 +272,7 @@ class Jeopardy(QtGui.QWidget):
             if ser_output:
                 self.buttonpress.emit(int(ser_output.decode()))
 
-    def __init__(self,app,game_file):
+    def __init__(self, app, game_file, load=False):
         super(Jeopardy,self).__init__()
         print(name)
         self.app = app
@@ -693,9 +694,14 @@ class Jeopardy(QtGui.QWidget):
 def main():
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('Jeopardy')
-    if len(sys.argv) == 2:
-        jeopardy = Jeopardy(app,sys.argv[1])
-        sys.exit(app.exec_())
+
+    parser = argparse.ArgumentParser(description='a jeopardy')
+    parser.add_argument('--load', default=False, action='store_true', help='load a saved game')
+    parser.add_argument('game_file', metavar='GAME_FILE', type=str, nargs=1, help='a game to play')
+    args = parser.parse_args()
+
+    jeopardy = Jeopardy(app, args.game_file[0], args.load)
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
