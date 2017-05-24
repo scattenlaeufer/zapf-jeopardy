@@ -23,6 +23,8 @@ color_2 = [255, 255, 0]
 color_3 = [0, 255, 0]
 color_4 = [0, 255, 255]
 
+backup_name = 'game_backup'
+
 if os.path.exists(serial_path):
     use_button_box = True
 else:
@@ -430,6 +432,10 @@ class Jeopardy(QtGui.QWidget):
         self.wall = Jeopardy_Wall(game_dir_head)
         self.wall.set_categories(jeopardy_categories)
 
+        self.game_backup = {}
+        self.game_backup['game_data'] = self.game_data
+        self.save()
+
         self.wall.player_wall_layout.addWidget(self.player['p1'].wall_box)
         self.wall.player_wall_layout.addWidget(self.player['p2'].wall_box)
         self.wall.player_wall_layout.addWidget(self.player['p3'].wall_box)
@@ -457,6 +463,27 @@ class Jeopardy(QtGui.QWidget):
             self.serialCom.exit()
             if self.listen:
                 self.player_pressed(self.button_list[output])
+
+    def save(self):
+        self.game_backup['player'] = {}
+        for index, player in self.player.items():
+            player_backup = {}
+            player_backup['name'] = player.name
+            player_backup['points'] = player.points
+            self.game_backup['player'][index] = player_backup
+        self.game_backup['wall'] = []
+        for button_row in self.wall.wall_button:
+            row_list = []
+            for button in button_row:
+                button_dict = {}
+                button_dict['text'] = button.text()
+                button_color = button.palette().color(1)
+                button_dict['color'] = [button_color.red(), button_color.green(), button_color.blue()]
+                row_list.append(button_dict)
+            self.game_backup['wall'].append(row_list)
+        json_backup = json.dumps(self.game_backup, sort_keys=True, indent=4)
+        with open(backup_name, 'w') as backup_file:
+            backup_file.write(json_backup)
 
     def quit(self):
         if use_button_box:
@@ -579,6 +606,7 @@ class Jeopardy(QtGui.QWidget):
         wall_button.setPalette(player.color)
         wall_button.setText(title)
         self.clear_answer_section()
+        self.save()
 
     def wrong(self,points_set=0):
         self.set_response(False)
@@ -604,6 +632,7 @@ class Jeopardy(QtGui.QWidget):
             self.wall.video_player.play()
         elif self.type_audio:
             self.wall.audio.play()
+        self.save()
 
     def reopen(self):
         if self.listen:
