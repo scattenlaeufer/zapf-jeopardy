@@ -288,7 +288,11 @@ class Jeopardy(QtGui.QWidget):
         game_str = ''
         with open(game_file,'r') as file:
             game_str = file.read()
-        self.game_data = json.loads(game_str)
+        if load:
+            self.game_backup = json.loads(game_str)
+            self.game_data = self.game_backup['game_data']
+        else:
+            self.game_data = json.loads(game_str)
         game_dir_head = os.path.split(game_file)[0]
 
         jeopardy_categories = []
@@ -433,9 +437,27 @@ class Jeopardy(QtGui.QWidget):
         self.wall = Jeopardy_Wall(game_dir_head)
         self.wall.set_categories(jeopardy_categories)
 
-        self.game_backup = {}
-        self.game_backup['game_data'] = self.game_data
-        self.save()
+        if load:
+            for index, player in self.game_backup['player'].items():
+                self.player[index].name = player['name']
+                self.player[index].name_text.setText(player['name'])
+                self.player[index].wall_box.setTitle(player['name'])
+                self.player[index].add_points(player['points'])
+            for i in range(5):
+                for j in range(5):
+                    self.wall.wall_button[i][j].setText(self.game_backup['wall'][i][j]['text'])
+                    self.jeopardy_button[i][j].setText(self.game_backup['wall'][i][j]['text'])
+                    button_color = QtGui.QPalette(QtGui.QColor(
+                                                               self.game_backup['wall'][i][j]['color'][0],
+                                                               self.game_backup['wall'][i][j]['color'][1],
+                                                               self.game_backup['wall'][i][j]['color'][2]
+                                                               ))
+                    self.wall.wall_button[i][j].setPalette(button_color)
+                    self.jeopardy_button[i][j].setPalette(button_color)
+        else:
+            self.game_backup = {}
+            self.game_backup['game_data'] = self.game_data
+            self.save()
 
         self.wall.player_wall_layout.addWidget(self.player['p1'].wall_box)
         self.wall.player_wall_layout.addWidget(self.player['p2'].wall_box)
