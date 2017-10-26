@@ -2,7 +2,7 @@
 
 import sys, os, json, subprocess, random, serial
 from textwrap import wrap
-from PyQt4 import QtGui, QtCore, Qt, phonon
+from PyQt5 import QtGui, QtWidgets, QtCore, Qt, QtMultimedia, QtMultimediaWidgets
 from time import sleep
 
 #TODO:
@@ -28,15 +28,15 @@ if os.path.exists(serial_path):
 else:
     use_button_box = False
 
-class Jeopardy_Wall(QtGui.QWidget):
+class Jeopardy_Wall(QtWidgets.QWidget):
 
     def __init__(self,file_head):
         super(Jeopardy_Wall,self).__init__()
-        self.grid = QtGui.QGridLayout(self)
+        self.grid = QtWidgets.QGridLayout(self)
 
         self.file_head = file_head
 
-        jeopardy_wall_layout = QtGui.QHBoxLayout(None)
+        jeopardy_wall_layout = QtWidgets.QHBoxLayout(None)
 
         self.wall_button = []
         self.wall_category_boxes = []
@@ -44,38 +44,40 @@ class Jeopardy_Wall(QtGui.QWidget):
 
         for i in range(5):
             self.wall_button.append([])
-            self.wall_category_layouts.append(QtGui.QVBoxLayout(None))
-            self.wall_category_boxes.append(QtGui.QGroupBox(''))
+            self.wall_category_layouts.append(QtWidgets.QVBoxLayout(None))
+            self.wall_category_boxes.append(QtWidgets.QGroupBox(''))
             self.wall_category_boxes[i].setLayout(self.wall_category_layouts[i])
             jeopardy_wall_layout.addWidget(self.wall_category_boxes[i])
             for j in range(5):
-                self.wall_button[i].append(QtGui.QPushButton(str((j+1)*points_factor)))
-                self.wall_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
+                self.wall_button[i].append(QtWidgets.QPushButton(str((j+1)*points_factor)))
+                self.wall_button[i][j].setSizePolicy(QtWidgets.QSizePolicy.Ignored,QtWidgets.QSizePolicy.Ignored)
                 self.wall_category_layouts[i].addWidget(self.wall_button[i][j])
 
-        self.player_wall_layout = QtGui.QHBoxLayout(None)
+        self.player_wall_layout = QtWidgets.QHBoxLayout(None)
 
-        self.jeopardy_wall_box = QtGui.QGroupBox('Jeopardy board')
+        self.jeopardy_wall_box = QtWidgets.QGroupBox('Jeopardy board')
         wall_font = self.jeopardy_wall_box.font()
         wall_font.setPointSize(font_size_wall)
         self.jeopardy_wall_box.setFont(wall_font)
         self.jeopardy_wall_box.setLayout(jeopardy_wall_layout)
 
 
-        player_wall_box = QtGui.QGroupBox('Player')
+        player_wall_box = QtWidgets.QGroupBox('Player')
         player_wall_box.setLayout(self.player_wall_layout)
 
-        answer_layout = QtGui.QVBoxLayout(None)
-        self.answer_label = QtGui.QLabel('')
+        answer_layout = QtWidgets.QVBoxLayout(None)
+        self.answer_label = QtWidgets.QLabel('')
         self.answer_label.setHidden(True)
         answer_font = self.font()
         answer_font.setPointSize(font_size_answer)
         self.answer_label.setFont(answer_font)
-        self.video_player = phonon.Phonon.VideoPlayer(phonon.Phonon.VideoCategory,None)
-        self.video_player.setHidden(True)
+        self.video_player = QtMultimedia.QMediaPlayer()
+        self.video_widget = QtMultimediaWidgets.QVideoWidget()
+        self.video_player.setVideoOutput(self.video_widget)
+        self.video_widget.setHidden(True)
         answer_layout.addWidget(self.answer_label)
-        answer_layout.addWidget(self.video_player)
-        self.answer_box = QtGui.QGroupBox('Answer')
+        answer_layout.addWidget(self.video_widget)
+        self.answer_box = QtWidgets.QGroupBox('Answer')
         self.answer_box.setLayout(answer_layout)
         self.answer_box.setHidden(True)
 
@@ -118,16 +120,10 @@ class Jeopardy_Wall(QtGui.QWidget):
             image = self.scale(QtGui.QPixmap(os.path.join(self.file_head,answer)))
             self.answer_label.setPixmap(image)
         elif type == 'video':
-            self.video_player.setHidden(False)
-            media_source = phonon.Phonon.MediaSource(os.path.join(self.file_head,answer))
-            self.video_player.play(media_source)
-            # self.video_player.play()
-            # print(media_source)
-            # print(self.video_player.mediaObject())
-            # print(os.path.join(self.file_head,answer))
-            # print(self.video_player.isPlaying())
-            # print(self.video_player.isPaused())
-            # print(self.video_player.totalTime())
+            self.video_widget.setVisible(True)
+            media_source = QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(QtCore.QFileInfo(os.path.join(self.file_head,answer)).absoluteFilePath()))
+            self.video_player.setMedia(media_source)
+            self.video_player.play()
         elif type == 'audio':
             self.answer_label.setHidden(False)
             self.answer_label.setText('listen up!')
@@ -136,12 +132,12 @@ class Jeopardy_Wall(QtGui.QWidget):
 
     def clear_answer_section(self,type):
         self.answer_label.setHidden(True)
-        self.video_player.setHidden(True)
+        self.video_widget.setVisible(False)
         self.answer_box.setHidden(True)
         self.jeopardy_wall_box.setHidden(False)
 
 
-class Jeopardy(QtGui.QWidget):
+class Jeopardy(QtWidgets.QWidget):
 
     # Class for the individual players
     class Player:
@@ -152,18 +148,18 @@ class Jeopardy(QtGui.QWidget):
             self.points = points
             self.color = QtGui.QPalette(QtGui.QColor(color[0],color[1],color[2]))
 
-            layout = QtGui.QGridLayout(None)
-            name_label = QtGui.QLabel('Name')
-            points_label = QtGui.QLabel('Points')
-            self.name_text = QtGui.QLineEdit()
+            layout = QtWidgets.QGridLayout(None)
+            name_label = QtWidgets.QLabel('Name')
+            points_label = QtWidgets.QLabel('Points')
+            self.name_text = QtWidgets.QLineEdit()
             self.name_text.setText(self.name)
             self.name_text.setReadOnly(True)
-            self.points_text = QtGui.QLineEdit()
+            self.points_text = QtWidgets.QLineEdit()
             self.points_text.setReadOnly(True)
             self.points_text.setText(str(self.points))
-            rename_button = QtGui.QPushButton('rename')
-            bonus_button = QtGui.QPushButton('bonus')
-            self.detect_button = QtGui.QPushButton('detect')
+            rename_button = QtWidgets.QPushButton('rename')
+            bonus_button = QtWidgets.QPushButton('bonus')
+            self.detect_button = QtWidgets.QPushButton('detect')
             if not use_button_box:
                 self.detect_button.setEnabled(False)
 
@@ -175,20 +171,20 @@ class Jeopardy(QtGui.QWidget):
             layout.addWidget(bonus_button,2,1)
             layout.addWidget(self.detect_button, 2, 2)
 
-            self.box = QtGui.QGroupBox(name)
+            self.box = QtWidgets.QGroupBox(name)
             self.box.setLayout(layout)
             self.box.setAutoFillBackground(True)
             self.box.setPalette(self.color)
 
-            wall_layout = QtGui.QHBoxLayout(None)
-            wall_points_label = QtGui.QLabel('points')
-            self.wall_points_text = QtGui.QLineEdit()
+            wall_layout = QtWidgets.QHBoxLayout(None)
+            wall_points_label = QtWidgets.QLabel('points')
+            self.wall_points_text = QtWidgets.QLineEdit()
             self.wall_points_text.setReadOnly(True)
             self.wall_points_text.setText(str(self.points))
             wall_layout.addWidget(wall_points_label)
             wall_layout.addWidget(self.wall_points_text)
 
-            self.wall_box = QtGui.QGroupBox(name)
+            self.wall_box = QtWidgets.QGroupBox(name)
             wall_box_font = self.wall_box.font()
             wall_box_font.setPointSize(font_size_player)
             self.wall_box.setFont(wall_box_font)
@@ -196,23 +192,25 @@ class Jeopardy(QtGui.QWidget):
             self.wall_box.setAutoFillBackground(True)
             self.wall_box.setPalette(self.color)
 
-            self.app.connect(rename_button,Qt.SIGNAL('pressed()'),lambda: self.rename())
-            self.app.connect(bonus_button,Qt.SIGNAL('pressed()'),lambda: self.bonus())
+            # self.app.connect(rename_button,Qt.SIGNAL('pressed()'),)
+            rename_button.pressed.connect(self.rename)
+            # self.app.connect(bonus_button,Qt.SIGNAL('pressed()'),lambda: self.bonus())
+            bonus_button.pressed.connect(self.bonus)
 
         def rename(self):
-            text, ok = QtGui.QInputDialog.getText(None,'rename '+self.name, 'enter new name:')
+            text, ok = QtWidgets.QInputDialog.getText(None,'rename '+self.name, 'enter new name:')
             if ok and text != '':
                 self.name = text
                 self.name_text.setText(self.name)
                 self.wall_box.setTitle(self.name)
 
         def bonus(self):
-            bonus_points, ok = QtGui.QInputDialog.getText(None,'bouns points','give '+self.name+' bonus points:')
+            bonus_points, ok = QtWidgets.QInputDialog.getText(None,'bouns points','give '+self.name+' bonus points:')
             if ok and bonus_points != '':
                 try:
                     self.add_points(int(bonus_points))
                 except ValueError:
-                    message = QtGui.QMessageBox(3,'ValueError','points must be integer!\nnoting will happen')
+                    message = QtWidgets.QMessageBox(3,'ValueError','points must be integer!\nnoting will happen')
                     message.exec_()
 
         def add_points(self,points):
@@ -224,22 +222,22 @@ class Jeopardy(QtGui.QWidget):
 
         def __init__(self,source="data/music.ogg"):
             super(Jeopardy.Music,self).__init__()
-            output = phonon.Phonon.AudioOutput(phonon.Phonon.MusicCategory,self)
-            self.media = phonon.Phonon.MediaObject(self)
-            phonon.Phonon.createPath(self.media, output)
-            self.media.setCurrentSource(phonon.Phonon.MediaSource(source))
+            url = QtCore.QUrl.fromLocalFile(QtCore.QFileInfo(source).absoluteFilePath())
+            content = QtMultimedia.QMediaContent(url)
+            self.player = QtMultimedia.QMediaPlayer()
+            self.player.setMedia(content)
 
         def play(self):
-            if self.media.state() != phonon.Phonon.PlayingState:
-                self.media.play()
+            if self.player.state() != QtMultimedia.QMediaPlayer.PlayingState:
+                self.player.play()
 
         def pause(self):
-            if self.media.state() == phonon.Phonon.PlayingState:
-                self.media.pause()
+            if self.player.state() == QtMultimedia.QMediaPlayer.PlayingState:
+                self.player.pause()
 
         def stop(self):
-            if self.media.state() == phonon.Phonon.PlayingState or self.media.state() == phonon.Phonon.PausedState:
-                self.media.stop()
+            if self.player.state() == QtMultimedia.QMediaPlayer.PlayingState or self.player.state() == QtMultimedia.QMediaPlayer.PausedState:
+                self.player.stop()
 
     class SerialCommunicator(QtCore.QThread):
 
@@ -256,7 +254,7 @@ class Jeopardy(QtGui.QWidget):
             self.timer = QtCore.QTimer()
             self.timer.moveToThread(self)
             self.timer.setInterval(self.read_interval)
-            self.app.connect(self.timer, Qt.SIGNAL('timeout()'), self.stuff)
+            self.timer.timeout.connect(self.stuff)
 
         def run(self):
             self.ser.reset_input_buffer()
@@ -292,11 +290,11 @@ class Jeopardy(QtGui.QWidget):
         for i in self.game_data:
             jeopardy_categories.append(i['category'])
 
-        self.grid = QtGui.QGridLayout(self)
+        self.grid = QtWidgets.QGridLayout(self)
 
         # Create the Jeopardy window
-        jeopardy_window = QtGui.QHBoxLayout(None)
-        jeopardy_board_box = QtGui.QGroupBox('Jeopardy board')
+        jeopardy_window = QtWidgets.QHBoxLayout(None)
+        jeopardy_board_box = QtWidgets.QGroupBox('Jeopardy board')
         jeopardy_board_box.setLayout(jeopardy_window)
         jeopardy_category_layouts = []
         self.jeopardy_category_boxes = []
@@ -304,52 +302,52 @@ class Jeopardy(QtGui.QWidget):
         # Create the Jeopardy buttons
         self.jeopardy_button = []
         for i in range(5):
-            jeopardy_category_layouts.append(QtGui.QVBoxLayout(None))
-            self.jeopardy_category_boxes.append(QtGui.QGroupBox(jeopardy_categories[i]))
+            jeopardy_category_layouts.append(QtWidgets.QVBoxLayout(None))
+            self.jeopardy_category_boxes.append(QtWidgets.QGroupBox(jeopardy_categories[i]))
             self.jeopardy_button.append([])
             for j in range(5):
-                self.jeopardy_button[i].append(QtGui.QPushButton(str((j+1)*points_factor)))
-                self.jeopardy_button[i][j].setSizePolicy(QtGui.QSizePolicy.Ignored,QtGui.QSizePolicy.Ignored)
+                self.jeopardy_button[i].append(QtWidgets.QPushButton(str((j+1)*points_factor)))
+                self.jeopardy_button[i][j].setSizePolicy(QtWidgets.QSizePolicy.Ignored,QtWidgets.QSizePolicy.Ignored)
                 jeopardy_category_layouts[i].addWidget(self.jeopardy_button[i][j])
-                self.app.connect(self.jeopardy_button[i][j],Qt.SIGNAL('pressed()'),lambda i=[i,j]: self.select_field(i[0],i[1]))
+                self.jeopardy_button[i][j].pressed.connect(lambda i=[i,j]: self.select_field(i[0],i[1]))
             self.jeopardy_category_boxes[i].setLayout(jeopardy_category_layouts[i])
             jeopardy_window.addWidget(self.jeopardy_category_boxes[i])
 
         # Create the Answer section
-        self.answer_label = QtGui.QLabel('')
+        self.answer_label = QtWidgets.QLabel('')
         self.answer_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.answer_play_button = QtGui.QPushButton('play')
-        self.answer_pause_button = QtGui.QPushButton('pause')
-        self.answer_stop_button = QtGui.QPushButton('stop')
+        self.answer_play_button = QtWidgets.QPushButton('play')
+        self.answer_pause_button = QtWidgets.QPushButton('pause')
+        self.answer_stop_button = QtWidgets.QPushButton('stop')
         self.answer_play_button.setHidden(True)
         self.answer_pause_button.setHidden(True)
         self.answer_stop_button.setHidden(True)
-        answer_layout = QtGui.QHBoxLayout(None)
+        answer_layout = QtWidgets.QHBoxLayout(None)
         answer_layout.addWidget(self.answer_label)
         answer_layout.addWidget(self.answer_play_button)
         answer_layout.addWidget(self.answer_pause_button)
         answer_layout.addWidget(self.answer_stop_button)
-        answer_box = QtGui.QGroupBox('presented answer')
+        answer_box = QtWidgets.QGroupBox('presented answer')
         answer_box.setLayout(answer_layout)
 
-        self.question_label = QtGui.QLabel('')
+        self.question_label = QtWidgets.QLabel('')
         self.question_label.setAlignment(QtCore.Qt.AlignCenter)
-        question_layout = QtGui.QHBoxLayout(None)
+        question_layout = QtWidgets.QHBoxLayout(None)
         question_layout.addWidget(self.question_label)
-        question_box = QtGui.QGroupBox('suggested question')
+        question_box = QtWidgets.QGroupBox('suggested question')
         question_box.setLayout(question_layout)
 
-        answer_section_layout = QtGui.QVBoxLayout(None)
+        answer_section_layout = QtWidgets.QVBoxLayout(None)
         answer_section_layout.addWidget(answer_box)
         answer_section_layout.addWidget(question_box)
 
         # Create the Repsonse section
-        response_section_layout = QtGui.QVBoxLayout(None)
-        self.correct_button = QtGui.QPushButton('CORRECT')
+        response_section_layout = QtWidgets.QVBoxLayout(None)
+        self.correct_button = QtWidgets.QPushButton('CORRECT')
         self.correct_button.setPalette(QtGui.QPalette(QtGui.QColor(0,255,0)))
-        self.wrong_button = QtGui.QPushButton('WRONG')
+        self.wrong_button = QtWidgets.QPushButton('WRONG')
         self.wrong_button.setPalette(QtGui.QPalette(QtGui.QColor(255,0,0)))
-        self.reopen_button = QtGui.QPushButton('REOPEN')
+        self.reopen_button = QtWidgets.QPushButton('REOPEN')
         self.set_response(False)
         self.reopen_button.setEnabled(False)
 
@@ -358,8 +356,8 @@ class Jeopardy(QtGui.QWidget):
         response_section_layout.addWidget(self.reopen_button)
 
         # Create the Player section
-        player_section_layout = QtGui.QVBoxLayout(None)
-        player_box = QtGui.QGroupBox('Player')
+        player_section_layout = QtWidgets.QVBoxLayout(None)
+        player_box = QtWidgets.QGroupBox('Player')
         player_box.setLayout(player_section_layout)
 
         self.player = {}
@@ -374,11 +372,11 @@ class Jeopardy(QtGui.QWidget):
         player_section_layout.addWidget(self.player['p4'].box)
 
         # Create the Global Butten section
-        global_button_layout = QtGui.QVBoxLayout(None)
+        global_button_layout = QtWidgets.QVBoxLayout(None)
 
-        quit = QtGui.QPushButton('quit')
-        self.random_player_button = QtGui.QPushButton('random player')
-        self.music_checkbox = QtGui.QCheckBox('play Jeoprady music')
+        quit = QtWidgets.QPushButton('quit')
+        self.random_player_button = QtWidgets.QPushButton('random player')
+        self.music_checkbox = QtWidgets.QCheckBox('play Jeoprady music')
         self.music_checkbox.setCheckState(0)
         global_button_layout.addWidget(self.music_checkbox)
         global_button_layout.addWidget(self.random_player_button)
@@ -393,33 +391,33 @@ class Jeopardy(QtGui.QWidget):
 
         # Create the KeyActions
         self.listen = False
-        player_1_key_event = QtGui.QShortcut(QtGui.QKeySequence('1'),self)
-        player_2_key_event = QtGui.QShortcut(QtGui.QKeySequence('2'),self)
-        player_3_key_event = QtGui.QShortcut(QtGui.QKeySequence('3'),self)
-        player_4_key_event = QtGui.QShortcut(QtGui.QKeySequence('4'),self)
+        player_1_key_event = QtWidgets.QShortcut(QtGui.QKeySequence('1'),self)
+        player_2_key_event = QtWidgets.QShortcut(QtGui.QKeySequence('2'),self)
+        player_3_key_event = QtWidgets.QShortcut(QtGui.QKeySequence('3'),self)
+        player_4_key_event = QtWidgets.QShortcut(QtGui.QKeySequence('4'),self)
 
         # Connecitong stuff to functions
-        self.app.connect(quit,Qt.SIGNAL('pressed()'),lambda: self.quit())
-        self.app.connect(self.random_player_button,Qt.SIGNAL('pressed()'),lambda: self.randomize_player())
-        self.app.connect(self.correct_button,Qt.SIGNAL('pressed()'),lambda: self.correct())
-        self.app.connect(self.wrong_button,Qt.SIGNAL('pressed()'),lambda: self.wrong())
-        self.app.connect(self.reopen_button,Qt.SIGNAL('pressed()'),lambda: self.reopen())
+        quit.pressed.connect(self.quit)
+        self.random_player_button.pressed.connect(self.randomize_player)
+        self.correct_button.pressed.connect(self.correct)
+        self.wrong_button.pressed.connect(self.wrong)
+        self.reopen_button.pressed.connect(self.reopen)
 
-        self.app.connect(self.answer_play_button,Qt.SIGNAL('pressed()'),lambda: self.answer_play())
-        self.app.connect(self.answer_pause_button,Qt.SIGNAL('pressed()'),lambda: self.answer_pause())
-        self.app.connect(self.answer_stop_button,Qt.SIGNAL('pressed()'),lambda: self.answer_stop())
+        self.answer_play_button.pressed.connect(self.answer_play)
+        self.answer_pause_button.pressed.connect(self.answer_pause)
+        self.answer_stop_button.pressed.connect(self.answer_stop)
 
         self.randomize_player()
 
-        self.app.connect(player_1_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p1'))
-        self.app.connect(player_2_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p2'))
-        self.app.connect(player_3_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p3'))
-        self.app.connect(player_4_key_event,Qt.SIGNAL('activated()'),lambda: self.player_pressed('p4'))
+        player_1_key_event.activated.connect(lambda: self.player_pressed('p1'))
+        player_2_key_event.activated.connect(lambda: self.player_pressed('p2'))
+        player_3_key_event.activated.connect(lambda: self.player_pressed('p3'))
+        player_4_key_event.activated.connect(lambda: self.player_pressed('p4'))
 
-        self.app.connect(self.player['p1'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p1'))
-        self.app.connect(self.player['p2'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p2'))
-        self.app.connect(self.player['p3'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p3'))
-        self.app.connect(self.player['p4'].detect_button, Qt.SIGNAL('pressed()'), lambda: self.detect_button('p4'))
+        self.player['p1'].detect_button.pressed.connect(lambda: self.detect_button('p1'))
+        self.player['p2'].detect_button.pressed.connect(lambda: self.detect_button('p2'))
+        self.player['p3'].detect_button.pressed.connect(lambda: self.detect_button('p3'))
+        self.player['p4'].detect_button.pressed.connect(lambda: self.detect_button('p4'))
 
         if use_button_box:
             self.serialCom.buttonpress.connect(self.serial_input)
@@ -461,7 +459,7 @@ class Jeopardy(QtGui.QWidget):
     def quit(self):
         if use_button_box:
             self.serialCom.exit()
-        message = QtGui.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        message = QtWidgets.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         resp = message.exec_()
         if resp == 16384:
             self.app.quit()
@@ -487,7 +485,7 @@ class Jeopardy(QtGui.QWidget):
                 # print(image)
                 self.wall.answer_label.setPixmap(image)
                 while not ok:
-                    self.points_set,ok = QtGui.QInputDialog().getInt(None,'DOUBLE JEOPARDY','double jeopardy\nbet '+str((level+1)*points_factor)+' to '+str((level+1)*2*points_factor)+' points',(level+1)*points_factor,(1+level)*points_factor,(1+level)*points_factor*2)
+                    self.points_set,ok = QtWidgets.QInputDialog().getInt(None,'DOUBLE JEOPARDY','double jeopardy\nbet '+str((level+1)*points_factor)+' to '+str((level+1)*2*points_factor)+' points',(level+1)*points_factor,(1+level)*points_factor,(1+level)*points_factor*2)
                 self.wall.answer_label.setHidden(True)
 
             self.current_field = [category_id,level]
@@ -516,7 +514,7 @@ class Jeopardy(QtGui.QWidget):
                 self.answer_label.setText('image')
             self.question_label.setText(self.wrap(self.game_data[category_id]['level'][level]['question']))
         else:
-            message = QtGui.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
+            message = QtWidgets.QMessageBox(3,'select player','a player must be selected.\nchoose one at random')
             message.exec_()
 
     def player_pressed(self,player_id):
@@ -669,7 +667,7 @@ class Jeopardy(QtGui.QWidget):
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Jeopardy')
     if len(sys.argv) == 2:
         jeopardy = Jeopardy(app,sys.argv[1])
