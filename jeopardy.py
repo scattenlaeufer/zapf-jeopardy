@@ -607,6 +607,13 @@ class Jeopardy(QtGui.QWidget):
 
     def reopen(self):
         if self.listen:
+            button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
+            wall_button = self.wall.wall_button[self.current_field[0]][self.current_field[1]]
+            text = str(wall_button.text()) + '\n' + '✗✗✗'
+            button.setText(text)
+            button.setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
+            wall_button.setText(text)
+            wall_button.setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
             self.set_response(False)
             self.set_field_activity(True)
             self.reopen_button.setEnabled(False)
