@@ -274,6 +274,7 @@ class Jeopardy(QtWidgets.QWidget):
         super(Jeopardy,self).__init__()
         print(name)
         self.app = app
+        self.game_file = game_file
         self.double_jeopardy = False
         self.active_player = None
         self.music = self.Music()
@@ -289,6 +290,7 @@ class Jeopardy(QtWidgets.QWidget):
         if load:
             self.game_backup = json.loads(game_str)
             self.game_data = self.game_backup['game_data']
+            game_file = self.game_backup['game_file']
         else:
             self.game_data = json.loads(game_str)
         game_dir_head = os.path.split(game_file)[0]
@@ -486,6 +488,7 @@ class Jeopardy(QtWidgets.QWidget):
                 self.player_pressed(self.button_list[output])
 
     def save(self):
+        self.game_backup['game_file'] = self.game_file
         self.game_backup['player'] = {}
         for index, player in self.player.items():
             player_backup = {}
