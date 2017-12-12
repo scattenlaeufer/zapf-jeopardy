@@ -13,7 +13,7 @@ from time import sleep
 name = 'ZaPF-Jeopardy (v0.1)'
 points_factor = 100
 
-serial_path = '/dev/ttyUSB0'
+default_serial_path = '/dev/ttyUSB0'
 
 font_size_wall = 20
 font_size_answer = 45
@@ -24,12 +24,7 @@ color_2 = [255, 255, 0]
 color_3 = [0, 255, 0]
 color_4 = [0, 255, 255]
 
-backup_name = 'game_backup'
-
-if os.path.exists(serial_path):
-    use_button_box = True
-else:
-    use_button_box = False
+default_backup_name = 'game_backup'
 
 class Jeopardy_Wall(QtWidgets.QWidget):
 
@@ -145,11 +140,12 @@ class Jeopardy(QtWidgets.QWidget):
     # Class for the individual players
     class Player:
 
-        def __init__(self,app,name,color,points=0):
+        def __init__(self, app, name, color, use_button_box, points=0):
             self.app = app
             self.name = name
             self.points = points
             self.color = QtGui.QPalette(QtGui.QColor(color[0],color[1],color[2]))
+            self.use_button_box = use_button_box
 
             layout = QtWidgets.QGridLayout(None)
             name_label = QtWidgets.QLabel('Name')
@@ -163,7 +159,7 @@ class Jeopardy(QtWidgets.QWidget):
             rename_button = QtWidgets.QPushButton('rename')
             bonus_button = QtWidgets.QPushButton('bonus')
             self.detect_button = QtWidgets.QPushButton('detect')
-            if not use_button_box:
+            if not self.use_button_box:
                 self.detect_button.setEnabled(False)
 
             layout.addWidget(name_label,0,0)
@@ -246,7 +242,7 @@ class Jeopardy(QtWidgets.QWidget):
 
         buttonpress = QtCore.pyqtSignal(int)
 
-        def __init__(self, app, serialport=serial_path, baudrate=9600):
+        def __init__(self, app, serialport=default_serial_path, baudrate=9600):
             super(Jeopardy.SerialCommunicator, self).__init__()
             self.app = app
 
@@ -270,16 +266,24 @@ class Jeopardy(QtWidgets.QWidget):
             if ser_output:
                 self.buttonpress.emit(int(ser_output.decode()))
 
-    def __init__(self, app, game_file, load=False):
+    def __init__(self, app, game_file, load=False, save_game=default_backup_name, serial_path=default_serial_path):
         super(Jeopardy,self).__init__()
         print(name)
         self.app = app
         self.game_file = game_file
+        self.backup_name = save_game
+        # self.serial_path = serial_path
         self.double_jeopardy = False
         self.active_player = None
         self.music = self.Music()
-        if use_button_box:
-            self.serialCom = self.SerialCommunicator(app)
+
+        if os.path.exists(serial_path):
+            self.use_button_box = True
+        else:
+            self.use_button_box = False
+
+        if self.use_button_box:
+            self.serialCom = self.SerialCommunicator(app, serial_path)
 
         self.button_list = ['p1', 'p2', 'p3', 'p4']
         self.detect_functions = {}
@@ -371,10 +375,10 @@ class Jeopardy(QtWidgets.QWidget):
         player_box.setLayout(player_section_layout)
 
         self.player = {}
-        self.player['p1'] = self.Player(self.app,'Player 1', color_1)
-        self.player['p2'] = self.Player(self.app,'Player 2', color_2)
-        self.player['p3'] = self.Player(self.app,'Player 3', color_3)
-        self.player['p4'] = self.Player(self.app,'Player 4', color_4)
+        self.player['p1'] = self.Player(self.app,'Player 1', color_1, self.use_button_box)
+        self.player['p2'] = self.Player(self.app,'Player 2', color_2, self.use_button_box)
+        self.player['p3'] = self.Player(self.app,'Player 3', color_3, self.use_button_box)
+        self.player['p4'] = self.Player(self.app,'Player 4', color_4, self.use_button_box)
 
         player_section_layout.addWidget(self.player['p1'].box)
         player_section_layout.addWidget(self.player['p2'].box)
@@ -429,7 +433,7 @@ class Jeopardy(QtWidgets.QWidget):
         self.player['p3'].detect_button.pressed.connect(lambda: self.detect_button('p3'))
         self.player['p4'].detect_button.pressed.connect(lambda: self.detect_button('p4'))
 
-        if use_button_box:
+        if self.use_button_box:
             self.serialCom.buttonpress.connect(self.serial_input)
 
         self.setLayout(self.grid)
@@ -508,17 +512,17 @@ class Jeopardy(QtWidgets.QWidget):
                 row_list.append(button_dict)
             self.game_backup['wall'].append(row_list)
         json_backup = json.dumps(self.game_backup, sort_keys=True, indent=4)
-        with open(backup_name, 'w') as backup_file:
+        with open(self.backup_name, 'w') as backup_file:
             backup_file.write(json_backup)
 
     def quit(self):
-        if use_button_box:
+        if self.use_button_box:
             self.serialCom.exit()
         message = QtWidgets.QMessageBox(4,'quit Jeoarpardy?','you really think, you might\nbe allowed to quit Jeopardy?',QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         resp = message.exec_()
         if resp == 16384:
             self.app.quit()
-        elif use_button_box:
+        elif self.use_button_box:
             self.serialCom.start()
 
     def randomize_player(self):
@@ -551,7 +555,7 @@ class Jeopardy(QtWidgets.QWidget):
                 self.player_pressed(self.active_player)
             else:
                 self.listen = True
-                if use_button_box:
+                if self.use_button_box:
                     self.serialCom.start()
                 self.set_field_activity(False)
                 if self.music_checkbox.checkState() == 2 and not (self.type_video or self.type_audio):
@@ -573,7 +577,7 @@ class Jeopardy(QtWidgets.QWidget):
             message.exec_()
 
     def player_pressed(self,player_id):
-        if use_button_box:
+        if self.use_button_box:
             if self.serialCom.isRunning():
                 self.serialCom.exit()
         if self.listen:
@@ -638,7 +642,7 @@ class Jeopardy(QtWidgets.QWidget):
         self.set_response(False)
         self.set_field_activity(False)
         self.listen = True
-        if use_button_box:
+        if self.use_button_box:
             self.serialCom.start()
         player = self.player[self.active_player]
         button = self.jeopardy_button[self.current_field[0]][self.current_field[1]]
@@ -678,12 +682,12 @@ class Jeopardy(QtWidgets.QWidget):
                 self.wall.video_player.pause()
             elif self.type_audio:
                 self.wall.audio.pause()
-            if use_button_box:
+            if self.use_button_box:
                 self.serialCom.exit()
         else:
             self.reset_player_color()
             self.listen = True
-            if use_button_box:
+            if self.use_button_box:
                 self.serialCom.start()
             self.set_response(False)
             if self.type_video:
@@ -728,11 +732,16 @@ def main():
     app.setApplicationName('Jeopardy')
 
     parser = argparse.ArgumentParser(description='a jeopardy')
-    parser.add_argument('--load', default=False, action='store_true', help='load a saved game')
+    parser.add_argument('--load', default=False, action='store_true',
+                        help='Load a saved game. In this case GAME_FILE is the save game.')
+    parser.add_argument('--save-game', default=default_backup_name, type=str, metavar='SAVE_GAME',
+                        help='name of the save game (default: game_backup)')
+    parser.add_argument('--serial-device', default=default_serial_path, type=str,
+                        help='path to the serial device used as button box.')
     parser.add_argument('game_file', metavar='GAME_FILE', type=str, nargs=1, help='a game to play')
     args = parser.parse_args()
 
-    jeopardy = Jeopardy(app, args.game_file[0], args.load)
+    jeopardy = Jeopardy(app, args.game_file[0], args.load, args.save_game, args.serial_device)
     sys.exit(app.exec_())
 
 
