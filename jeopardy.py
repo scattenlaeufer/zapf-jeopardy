@@ -16,7 +16,7 @@ points_factor = 100
 serial_path = '/dev/ttyUSB0'
 
 font_size_wall = 20
-font_size_answer = 25
+font_size_answer = 45
 font_size_player = 20
 
 color_1 = [255, 165, 100]
