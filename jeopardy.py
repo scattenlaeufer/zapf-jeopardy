@@ -291,9 +291,10 @@ class Jeopardy(QtWidgets.QWidget):
             self.game_backup = json.loads(game_str)
             self.game_data = self.game_backup['game_data']
             game_file = self.game_backup['game_file']
+            self.game_dir_head = self.game_backup['game_dir']
         else:
             self.game_data = json.loads(game_str)
-        game_dir_head = os.path.split(game_file)[0]
+            self.game_dir_head = os.path.split(game_file)[0]
 
         jeopardy_categories = []
         for i in self.game_data:
@@ -434,7 +435,7 @@ class Jeopardy(QtWidgets.QWidget):
         self.setLayout(self.grid)
         self.setWindowTitle(name)
 
-        self.wall = Jeopardy_Wall(game_dir_head)
+        self.wall = Jeopardy_Wall(self.game_dir_head)
         self.wall.set_categories(jeopardy_categories)
 
         if load:
@@ -457,6 +458,7 @@ class Jeopardy(QtWidgets.QWidget):
         else:
             self.game_backup = {}
             self.game_backup['game_data'] = self.game_data
+            self.game_backup['game_dir'] = self.game_dir_head
             self.save()
 
         self.wall.player_wall_layout.addWidget(self.player['p1'].wall_box)
