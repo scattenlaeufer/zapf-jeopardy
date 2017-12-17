@@ -34,3 +34,37 @@ command.
 
 This info can also be accessed by running `./jeopardy.py --help`.
 
+## Games
+
+A game consist of a JSON file, that contains all the information needed and the
+media files used as possible answers.
+
+### JSON file
+
+The game file itself is a text file, that is processable by a JSON parser and
+contains a list of five dictionaries, which each are interpreted as the
+categories of the game. The entries of those dictionaries are structured as
+follows:
+
+| Key      | Type       | Content                                   |
+| -------- | ---------- | ----------------------------------------- |
+| category | string     | Name of the category                      |
+| level    | dictionary | Dictionary containing the separat answers |
+
+The level-dictionaries are thusly structured:
+
+| Key             | Type    | Content                                                             |
+| --------------- | ------- | ------------------------------------------------------------------- |
+| answer          | string  | The answer to be shown                                              |
+| question        | string  | A possible question to the answer                                   |
+| type            | string  | The type of the answer (either `text`, `image`, `audio` or `video`) |
+| double_jeopardy | boolean | Whether this answer is a Double Jeopardy or not                     |
+
+### Answer Types
+
+Answers can be either a text, an image, an audio file or a video. If it's
+anything but a text, the entry in the game file must be a relative path from
+the location of the game file to the media file. At some point there might be
+support for absolute paths, but currently that's not the case. Which type of
+answer is being used needs to be declared in `type` for the program to use the
+correct method of displaying the answer.
