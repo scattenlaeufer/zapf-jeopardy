@@ -475,20 +475,20 @@ class Jeopardy(QtWidgets.QWidget):
         self.wall.show()
 
     def detect_button(self, player):
-        if use_button_box:
+        if self.use_button_box:
             self.detect_functions[player] = lambda x: self.return_serial_input(player, x)
             self.serialCom.buttonpress.connect(self.detect_functions[player])
             self.serialCom.start()
 
     def return_serial_input(self, player, output):
-        if use_button_box:
+        if self.use_button_box:
             self.serialCom.exit()
             self.serialCom.buttonpress.disconnect(self.detect_functions[player])
             self.button_list[output] = player
             self.player[player].detect_button.setText(str(output))
 
     def serial_input(self, output):
-        if use_button_box:
+        if self.use_button_box:
             self.serialCom.exit()
             if self.listen:
                 self.player_pressed(self.button_list[output])
