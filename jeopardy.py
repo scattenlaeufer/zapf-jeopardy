@@ -127,6 +127,12 @@ class Jeopardy_Wall(QtWidgets.QWidget):
             self.answer_label.setText('listen up!')
             self.audio = Jeopardy.Music(os.path.join(self.file_head,answer))
             self.audio.play()
+        elif type == 'audiotext':
+            text_split = answer.split(';')
+            self.answer_label.setHidden(False)
+            self.answer_label.setText(text_split[1])
+            self.audio = Jeopardy.Music(os.path.join(self.file_head, text_split[0]))
+            self.audio.play()
 
     def clear_answer_section(self,type):
         self.answer_label.setHidden(True)
@@ -550,7 +556,7 @@ class Jeopardy(QtWidgets.QWidget):
             self.current_field = [category_id,level]
             self.jeopardy_button[category_id][level].setPalette(QtGui.QPalette(QtGui.QColor(255,255,255)))
             self.type_video = self.game_data[category_id]['level'][level]['type'] in ['video']
-            self.type_audio = self.game_data[category_id]['level'][level]['type'] in ['audio']
+            self.type_audio = self.game_data[category_id]['level'][level]['type'] in ['audio', 'audiotext']
             if self.double_jeopardy:
                 self.player_pressed(self.active_player)
             else:
