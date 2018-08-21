@@ -17,6 +17,7 @@ default_serial_path = '/dev/ttyUSB0'
 
 font_size_wall = 20
 font_size_answer = 45
+answer_length = 50
 font_size_player = 20
 
 color_1 = [255, 165, 100]
@@ -112,7 +113,10 @@ class Jeopardy_Wall(QtWidgets.QWidget):
         self.answer_box.setHidden(False)
         if type == 'text':
             self.answer_label.setHidden(False)
-            self.answer_label.setText('\n'.join(wrap(answer,50)))
+            answer = answer.split('\\n')
+            for line in answer:
+                line = '\n'.join(wrap(line, answer_length))
+            self.answer_label.setText('\n'.join(answer))
         elif type == 'image':
             self.answer_label.setHidden(False)
             image = self.scale(QtGui.QPixmap(os.path.join(self.file_head,answer)))
