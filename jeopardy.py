@@ -114,9 +114,10 @@ class Jeopardy_Wall(QtWidgets.QWidget):
         if type == 'text':
             self.answer_label.setHidden(False)
             answer = answer.split('\\n')
+            answer_out = []
             for line in answer:
-                line = '\n'.join(wrap(line, answer_length))
-            self.answer_label.setText('\n'.join(answer))
+                answer_out.append('\n'.join(wrap(line, answer_length)))
+            self.answer_label.setText('\n'.join(answer_out))
         elif type == 'image':
             self.answer_label.setHidden(False)
             image = self.scale(QtGui.QPixmap(os.path.join(self.file_head,answer)))
